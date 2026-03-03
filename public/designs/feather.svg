@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Main spine -->
+  <path d="M100 20 Q95 100 90 180" stroke-width="2"/>
+  <!-- Left barbs -->
+  <path d="M97 40 Q70 35 55 45" stroke-width="1"/>
+  <path d="M96 55 Q65 50 48 62" stroke-width="1"/>
+  <path d="M95 70 Q60 68 42 80" stroke-width="1"/>
+  <path d="M95 85 Q58 85 40 98" stroke-width="1"/>
+  <path d="M94 100 Q58 102 42 115" stroke-width="1"/>
+  <path d="M93 115 Q60 118 48 130" stroke-width="1"/>
+  <path d="M93 130 Q65 134 55 145" stroke-width="1"/>
+  <path d="M92 145 Q72 148 65 158" stroke-width="1"/>
+  <!-- Right barbs -->
+  <path d="M103 40 Q128 35 142 45" stroke-width="1"/>
+  <path d="M102 55 Q130 50 145 62" stroke-width="1"/>
+  <path d="M102 70 Q135 68 148 80" stroke-width="1"/>
+  <path d="M101 85 Q138 85 152 98" stroke-width="1"/>
+  <path d="M101 100 Q135 102 148 115" stroke-width="1"/>
+  <path d="M100 115 Q132 118 142 130" stroke-width="1"/>
+  <path d="M99 130 Q128 134 138 145" stroke-width="1"/>
+  <path d="M98 145 Q122 148 130 158" stroke-width="1"/>
+  <!-- Feather tip detail -->
+  <path d="M100 20 Q105 15 100 10 Q95 15 100 20Z" fill="#1a1a1a"/>
+</svg>

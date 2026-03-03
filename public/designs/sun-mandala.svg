@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <circle cx="100" cy="100" r="15" fill="#1a1a1a" opacity="0.15"/>
+  <circle cx="100" cy="100" r="15"/>
+  <circle cx="100" cy="100" r="25"/>
+  <!-- Sun rays -->
+  <g stroke-width="2">
+    <line x1="100" y1="70" x2="100" y2="35"/>
+    <line x1="121" y1="79" x2="146" y2="54"/>
+    <line x1="130" y1="100" x2="165" y2="100"/>
+    <line x1="121" y1="121" x2="146" y2="146"/>
+    <line x1="100" y1="130" x2="100" y2="165"/>
+    <line x1="79" y1="121" x2="54" y2="146"/>
+    <line x1="70" y1="100" x2="35" y2="100"/>
+    <line x1="79" y1="79" x2="54" y2="54"/>
+  </g>
+  <!-- Ray tips -->
+  <g fill="#1a1a1a">
+    <circle cx="100" cy="32" r="3"/>
+    <circle cx="148" cy="52" r="3"/>
+    <circle cx="168" cy="100" r="3"/>
+    <circle cx="148" cy="148" r="3"/>
+    <circle cx="100" cy="168" r="3"/>
+    <circle cx="52" cy="148" r="3"/>
+    <circle cx="32" cy="100" r="3"/>
+    <circle cx="52" cy="52" r="3"/>
+  </g>
+  <!-- Wavy inner ring -->
+  <path d="M100 72 Q108 78 115 72 Q122 78 128 72" stroke-width="1"/>
+  <path d="M128 100 Q122 108 128 115 Q122 122 128 128" stroke-width="1" transform="rotate(90 100 100)"/>
+</svg>

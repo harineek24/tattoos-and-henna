@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Crescent moon -->
+  <path d="M120 30 A60 60 0 1 0 120 170 A45 45 0 1 1 120 30Z" fill="#1a1a1a" opacity="0.08"/>
+  <path d="M120 30 A60 60 0 1 0 120 170 A45 45 0 1 1 120 30Z"/>
+  <!-- Stars -->
+  <g fill="#1a1a1a">
+    <circle cx="145" cy="55" r="2"/>
+    <circle cx="160" cy="80" r="1.5"/>
+    <circle cx="155" cy="110" r="2"/>
+    <circle cx="148" cy="140" r="1.5"/>
+    <circle cx="165" cy="65" r="1"/>
+    <circle cx="170" cy="95" r="1"/>
+    <circle cx="163" cy="125" r="1"/>
+  </g>
+  <!-- Decorative dots on crescent -->
+  <g fill="#1a1a1a">
+    <circle cx="85" cy="50" r="2.5"/>
+    <circle cx="68" cy="70" r="2"/>
+    <circle cx="58" cy="95" r="2.5"/>
+    <circle cx="60" cy="120" r="2"/>
+    <circle cx="72" cy="142" r="2.5"/>
+    <circle cx="90" cy="158" r="2"/>
+  </g>
+</svg>

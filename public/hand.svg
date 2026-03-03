@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 750" fill="none">
+  <defs>
+    <!-- Skin gradient -->
+    <radialGradient id="skin" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#f5d0b0"/>
+      <stop offset="50%" stop-color="#e8b896"/>
+      <stop offset="100%" stop-color="#d4a07a"/>
+    </radialGradient>
+    <radialGradient id="palm-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#daa88a"/>
+      <stop offset="100%" stop-color="#c8967a"/>
+    </radialGradient>
+    <!-- Subtle shadow for depth -->
+    <filter id="inner-shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+      <feOffset dx="0" dy="2" result="offsetBlur"/>
+      <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Drop shadow -->
+  <g opacity="0.15" transform="translate(8,8)">
+    <path d="M250 720
+      Q160 720 140 650
+      L120 560
+      Q110 520 100 480
+      L90 430
+      Q80 380 85 340
+      Q88 310 80 280
+      L55 200
+      Q45 160 50 130
+      Q55 105 70 100
+      Q85 95 95 110
+      Q105 125 110 160
+      L125 230
+      Q128 240 130 235
+      L115 140
+      Q105 90 100 55
+      Q97 25 110 15
+      Q125 5 140 15
+      Q155 28 158 55
+      L170 140
+      L180 225
+      Q183 235 186 225
+      L185 130
+      Q183 75 185 40
+      Q188 10 205 5
+      Q225 0 230 25
+      Q235 50 235 100
+      L238 180
+      L240 230
+      Q243 240 246 230
+      L250 155
+      Q252 110 258 80
+      Q265 50 280 48
+      Q298 45 305 70
+      Q310 90 308 130
+      L300 230
+      Q298 260 300 280
+      L310 340
+      Q325 315 345 300
+      Q365 285 385 295
+      Q405 310 400 345
+      Q395 375 380 400
+      L340 460
+      Q310 500 300 530
+      L280 590
+      Q270 630 265 660
+      Q260 700 250 720Z" fill="#333"/>
+  </g>
+
+  <!-- Main hand shape -->
+  <path d="M250 710
+    Q165 710 145 645
+    L125 555
+    Q115 515 105 475
+    L95 425
+    Q85 375 88 335
+    Q90 305 82 275
+    L58 195
+    Q48 155 53 125
+    Q58 100 73 95
+    Q88 90 98 105
+    Q108 120 113 155
+    L128 225
+    Q131 238 135 230
+    L118 135
+    Q108 85 103 50
+    Q100 20 113 10
+    Q128 0 143 10
+    Q158 23 161 50
+    L173 135
+    L183 220
+    Q186 232 190 220
+    L188 125
+    Q186 70 188 35
+    Q191 5 208 0
+    Q228 -5 233 20
+    Q238 45 238 95
+    L241 175
+    L243 225
+    Q246 237 250 225
+    L253 150
+    Q255 105 261 75
+    Q268 45 283 43
+    Q301 40 308 65
+    Q313 85 311 125
+    L303 225
+    Q301 255 303 275
+    L313 335
+    Q328 310 348 295
+    Q368 280 388 290
+    Q408 305 403 340
+    Q398 370 383 395
+    L343 455
+    Q313 495 303 525
+    L283 585
+    Q273 625 268 655
+    Q263 695 250 710Z" fill="url(#skin)" stroke="#c8967a" stroke-width="1.5"/>
+
+  <!-- Palm area (slightly different shade for depth) -->
+  <path d="M150 400 Q130 350 140 300 Q160 280 200 280 Q250 275 300 285 Q320 300 310 350 Q300 420 270 500 Q250 550 220 550 Q180 530 160 470Z" fill="url(#palm-shadow)" opacity="0.3"/>
+
+  <!-- Finger creases / knuckle lines -->
+  <g stroke="#c09070" stroke-width="1" opacity="0.6">
+    <!-- Pinky base crease -->
+    <path d="M92 335 Q100 330 115 333"/>
+    <!-- Ring finger base crease -->
+    <path d="M135 290 Q155 282 175 288"/>
+    <!-- Middle finger base crease -->
+    <path d="M185 275 Q210 268 235 275"/>
+    <!-- Index finger base crease -->
+    <path d="M250 280 Q270 274 295 280"/>
+
+    <!-- Finger joint creases - pinky -->
+    <path d="M78 260 Q88 255 98 260"/>
+    <path d="M72 195 Q82 190 92 195"/>
+
+    <!-- Ring finger joints -->
+    <path d="M140 230 Q155 224 170 230"/>
+    <path d="M133 155 Q150 148 167 155"/>
+
+    <!-- Middle finger joints -->
+    <path d="M195 215 Q213 208 230 215"/>
+    <path d="M190 130 Q210 123 230 130"/>
+
+    <!-- Index finger joints -->
+    <path d="M258 220 Q273 214 290 220"/>
+    <path d="M260 145 Q275 138 292 145"/>
+
+    <!-- Thumb joint crease -->
+    <path d="M340 360 Q355 350 370 358"/>
+    <path d="M360 320 Q370 312 382 318"/>
+  </g>
+
+  <!-- Palm lines -->
+  <g stroke="#c09070" stroke-width="1.2" opacity="0.5" fill="none">
+    <!-- Heart line (top) -->
+    <path d="M100 370 Q150 340 200 350 Q250 358 310 340"/>
+    <!-- Head line (middle) -->
+    <path d="M110 420 Q160 400 220 405 Q270 408 295 395"/>
+    <!-- Life line -->
+    <path d="M285 330 Q260 380 230 440 Q200 510 175 560 Q160 590 150 610"/>
+    <!-- Fate line -->
+    <path d="M220 530 Q225 470 230 420 Q235 380 232 340"/>
+  </g>
+
+  <!-- Wrist lines -->
+  <g stroke="#c09070" stroke-width="1" opacity="0.4">
+    <path d="M155 660 Q210 650 270 660"/>
+    <path d="M160 680 Q215 670 265 680"/>
+  </g>
+
+  <!-- Fingernails -->
+  <g fill="#f0d4bc" stroke="#d4a88a" stroke-width="0.8">
+    <!-- Pinky nail -->
+    <path d="M65 115 Q60 95 65 82 Q73 75 82 82 Q87 95 82 115Z"/>
+    <!-- Ring nail -->
+    <path d="M150 55 Q147 32 152 18 Q162 8 172 18 Q177 32 174 55Z"/>
+    <!-- Middle nail -->
+    <path d="M205 15 Q203 -8 208 -22 Q218 -32 228 -22 Q233 -8 231 15Z"/>
+    <!-- Index nail -->
+    <path d="M262 58 Q260 38 265 25 Q275 15 285 25 Q290 38 288 58Z"/>
+    <!-- Thumb nail -->
+    <path d="M378 285 Q385 268 395 262 Q405 265 405 280 Q400 295 390 300Z"/>
+  </g>
+
+  <!-- Subtle highlights for realism -->
+  <g opacity="0.15" fill="white">
+    <ellipse cx="200" cy="400" rx="40" ry="60"/>
+    <ellipse cx="80" cy="170" rx="10" ry="25"/>
+    <ellipse cx="160" cy="120" rx="12" ry="30"/>
+    <ellipse cx="218" cy="100" rx="12" ry="35"/>
+    <ellipse cx="278" cy="120" rx="12" ry="30"/>
+  </g>
+</svg>

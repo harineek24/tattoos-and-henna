@@ -1,0 +1,233 @@
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { Stage, Layer, Image as KonvaImage, Transformer } from 'react-konva';
+import type Konva from 'konva';
+import type { PlacedDesign } from '../types';
+
+interface HandCanvasProps {
+  placedDesigns: PlacedDesign[];
+  onUpdateDesign: (id: string, attrs: Partial<PlacedDesign>) => void;
+  onDeleteDesign: (id: string) => void;
+  onDropDesign: (imageUrl: string, x: number, y: number) => void;
+}
+
+// Load an image and return it
+function useImage(url: string): HTMLImageElement | null {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    img.onload = () => setImage(img);
+    return () => { img.onload = null; };
+  }, [url]);
+  return image;
+}
+
+// Individual design on the hand
+function PlacedDesignImage({
+  design,
+  isSelected,
+  onSelect,
+  onChange,
+}: {
+  design: PlacedDesign;
+  isSelected: boolean;
+  onSelect: () => void;
+  onChange: (attrs: Partial<PlacedDesign>) => void;
+}) {
+  const shapeRef = useRef<Konva.Image>(null);
+  const trRef = useRef<Konva.Transformer>(null);
+  const image = useImage(design.image_url);
+
+  useEffect(() => {
+    if (isSelected && trRef.current && shapeRef.current) {
+      trRef.current.nodes([shapeRef.current]);
+      trRef.current.getLayer()?.batchDraw();
+    }
+  }, [isSelected]);
+
+  if (!image) return null;
+
+  return (
+    <>
+      <KonvaImage
+        ref={shapeRef}
+        image={image}
+        x={design.x}
+        y={design.y}
+        scaleX={design.scaleX}
+        scaleY={design.scaleY}
+        rotation={design.rotation}
+        draggable
+        onClick={onSelect}
+        onTap={onSelect}
+        onDragEnd={(e) => {
+          onChange({ x: e.target.x(), y: e.target.y() });
+        }}
+        onTransformEnd={() => {
+          const node = shapeRef.current;
+          if (!node) return;
+          onChange({
+            x: node.x(),
+            y: node.y(),
+            scaleX: node.scaleX(),
+            scaleY: node.scaleY(),
+            rotation: node.rotation(),
+          });
+        }}
+      />
+      {isSelected && (
+        <Transformer
+          ref={trRef}
+          rotateEnabled={true}
+          enabledAnchors={[
+            'top-left', 'top-right', 'bottom-left', 'bottom-right',
+          ]}
+          boundBoxFunc={(oldBox, newBox) => {
+            if (Math.abs(newBox.width) < 10 || Math.abs(newBox.height) < 10) {
+              return oldBox;
+            }
+            return newBox;
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+export default function HandCanvas({
+  placedDesigns,
+  onUpdateDesign,
+  onDeleteDesign,
+  onDropDesign,
+}: HandCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<Konva.Stage>(null);
+  const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handImage = useImage('/hand.svg');
+
+  // Resize observer
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        setDimensions({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  // Handle drop from gallery
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const imageUrl = e.dataTransfer.getData('design-url');
+    if (!imageUrl) return;
+
+    stage.setPointersPositions(e);
+    const pos = stage.getPointerPosition();
+    if (!pos) return;
+
+    onDropDesign(imageUrl, pos.x, pos.y);
+  }, [onDropDesign]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  // Deselect on clicking empty area
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleStageClick = (e: Konva.KonvaEventObject<any>) => {
+    if (e.target === e.target.getStage() || e.target.name() === 'hand-image') {
+      setSelectedId(null);
+    }
+  };
+
+  // Delete key support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        onDeleteDesign(selectedId);
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, onDeleteDesign]);
+
+  // Compute hand image sizing to fill the canvas area
+  const handScale = handImage
+    ? Math.min(
+        dimensions.width / handImage.width,
+        dimensions.height / handImage.height
+      ) * 0.92
+    : 1;
+  const handX = handImage ? (dimensions.width - handImage.width * handScale) / 2 : 0;
+  const handY = handImage ? (dimensions.height - handImage.height * handScale) / 2 : 0;
+
+  return (
+    <div
+      ref={containerRef}
+      className="h-full w-full relative"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+    >
+      <Stage
+        ref={stageRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        onClick={handleStageClick}
+        onTap={handleStageClick}
+      >
+        <Layer>
+          {handImage && (
+            <KonvaImage
+              image={handImage}
+              x={handX}
+              y={handY}
+              scaleX={handScale}
+              scaleY={handScale}
+              name="hand-image"
+              listening={true}
+            />
+          )}
+          {placedDesigns.map((d) => (
+            <PlacedDesignImage
+              key={d.id}
+              design={d}
+              isSelected={d.id === selectedId}
+              onSelect={() => setSelectedId(d.id)}
+              onChange={(attrs) => onUpdateDesign(d.id, attrs)}
+            />
+          ))}
+        </Layer>
+      </Stage>
+
+      {/* Instructions overlay */}
+      {placedDesigns.length === 0 && (
+        <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
+          <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-[var(--text-muted)]">
+            Drag a design from the gallery onto the hand
+          </div>
+        </div>
+      )}
+
+      {selectedId && (
+        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-[var(--text-muted)]">
+          Press Delete to remove · Drag corners to resize/rotate
+        </div>
+      )}
+    </div>
+  );
+}

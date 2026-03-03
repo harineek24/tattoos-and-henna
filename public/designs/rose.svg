@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Inner bud -->
+  <path d="M100 70 Q105 80 100 90 Q95 80 100 70Z" fill="#1a1a1a" opacity="0.1"/>
+  <path d="M100 70 Q105 80 100 90 Q95 80 100 70Z"/>
+  <!-- Inner petals -->
+  <path d="M100 90 Q115 80 118 90 Q115 100 100 95Z"/>
+  <path d="M100 90 Q85 80 82 90 Q85 100 100 95Z"/>
+  <!-- Middle petals -->
+  <path d="M100 95 Q125 75 130 95 Q125 115 100 108Z"/>
+  <path d="M100 95 Q75 75 70 95 Q75 115 100 108Z"/>
+  <!-- Outer petals -->
+  <path d="M100 108 Q135 80 140 105 Q135 130 100 120Z"/>
+  <path d="M100 108 Q65 80 60 105 Q65 130 100 120Z"/>
+  <path d="M100 120 Q130 105 135 125 Q125 145 100 135Z"/>
+  <path d="M100 120 Q70 105 65 125 Q75 145 100 135Z"/>
+  <!-- Stem -->
+  <path d="M100 135 Q100 155 98 175" stroke-width="2"/>
+  <!-- Leaves on stem -->
+  <path d="M98 150 Q80 140 75 150 Q85 155 98 150Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <path d="M99 162 Q115 155 120 162 Q112 168 99 162Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <!-- Thorn -->
+  <path d="M99 155 L93 148" stroke-width="1"/>
+</svg>

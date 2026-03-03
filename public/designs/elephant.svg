@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Body -->
+  <ellipse cx="110" cy="110" rx="50" ry="40"/>
+  <!-- Head -->
+  <circle cx="60" cy="85" r="30"/>
+  <!-- Ear -->
+  <path d="M40 70 Q20 55 25 80 Q28 95 40 90" fill="#1a1a1a" opacity="0.05"/>
+  <path d="M40 70 Q20 55 25 80 Q28 95 40 90"/>
+  <!-- Trunk -->
+  <path d="M38 100 Q30 120 35 140 Q38 150 45 148 Q42 140 45 125 Q48 110 45 100" stroke-width="2"/>
+  <!-- Eye -->
+  <circle cx="55" cy="78" r="3" fill="#1a1a1a"/>
+  <!-- Tusk -->
+  <path d="M52 100 Q48 115 55 118" stroke-width="1.5"/>
+  <!-- Legs -->
+  <line x1="85" y1="145" x2="85" y2="175" stroke-width="3"/>
+  <line x1="105" y1="148" x2="105" y2="178" stroke-width="3"/>
+  <line x1="125" y1="148" x2="125" y2="178" stroke-width="3"/>
+  <line x1="140" y1="145" x2="140" y2="175" stroke-width="3"/>
+  <!-- Tail -->
+  <path d="M158 100 Q170 95 172 105 Q170 108 168 105" stroke-width="1.5"/>
+  <!-- Blanket decoration -->
+  <path d="M85 90 Q110 82 135 90" stroke-width="1"/>
+  <path d="M85 95 Q110 87 135 95" stroke-width="1"/>
+  <!-- Mandala on body -->
+  <circle cx="115" cy="108" r="8" stroke-width="1"/>
+  <circle cx="115" cy="108" r="4" stroke-width="1"/>
+  <circle cx="115" cy="108" r="1.5" fill="#1a1a1a"/>
+</svg>

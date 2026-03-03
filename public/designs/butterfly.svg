@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Body -->
+  <ellipse cx="100" cy="100" rx="4" ry="30" fill="#1a1a1a" opacity="0.2"/>
+  <ellipse cx="100" cy="100" rx="4" ry="30"/>
+  <!-- Head -->
+  <circle cx="100" cy="65" r="5" fill="#1a1a1a" opacity="0.2"/>
+  <circle cx="100" cy="65" r="5"/>
+  <!-- Antennae -->
+  <path d="M98 62 Q85 40 75 35" stroke-width="1"/>
+  <path d="M102 62 Q115 40 125 35" stroke-width="1"/>
+  <circle cx="75" cy="35" r="2" fill="#1a1a1a"/>
+  <circle cx="125" cy="35" r="2" fill="#1a1a1a"/>
+  <!-- Upper wings -->
+  <path d="M96 80 Q60 50 45 70 Q30 90 55 100 Q75 105 96 95Z" fill="#1a1a1a" opacity="0.05"/>
+  <path d="M96 80 Q60 50 45 70 Q30 90 55 100 Q75 105 96 95Z"/>
+  <path d="M104 80 Q140 50 155 70 Q170 90 145 100 Q125 105 104 95Z" fill="#1a1a1a" opacity="0.05"/>
+  <path d="M104 80 Q140 50 155 70 Q170 90 145 100 Q125 105 104 95Z"/>
+  <!-- Lower wings -->
+  <path d="M96 100 Q65 105 55 120 Q45 140 65 145 Q85 148 96 115Z" fill="#1a1a1a" opacity="0.05"/>
+  <path d="M96 100 Q65 105 55 120 Q45 140 65 145 Q85 148 96 115Z"/>
+  <path d="M104 100 Q135 105 145 120 Q155 140 135 145 Q115 148 104 115Z" fill="#1a1a1a" opacity="0.05"/>
+  <path d="M104 100 Q135 105 145 120 Q155 140 135 145 Q115 148 104 115Z"/>
+  <!-- Wing details -->
+  <circle cx="65" cy="80" r="5" stroke-width="1"/>
+  <circle cx="135" cy="80" r="5" stroke-width="1"/>
+  <circle cx="68" cy="125" r="3" stroke-width="1"/>
+  <circle cx="132" cy="125" r="3" stroke-width="1"/>
+</svg>

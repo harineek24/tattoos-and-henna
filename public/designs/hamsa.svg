@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Main palm shape -->
+  <path d="M60 80 L60 40 Q60 25 70 25 Q80 25 80 40 L80 75
+           L80 30 Q80 15 90 15 Q100 15 100 30 L100 75
+           L100 25 Q100 10 110 10 Q120 10 120 25 L120 75
+           L120 35 Q120 20 130 20 Q140 20 140 35 L140 80
+           Q140 60 155 55 Q165 55 165 70 L165 100
+           Q165 160 100 185 Q35 160 35 100 L35 70
+           Q35 55 45 55 Q60 60 60 80Z"/>
+  <!-- Eye -->
+  <circle cx="100" cy="115" r="18"/>
+  <circle cx="100" cy="115" r="10"/>
+  <circle cx="100" cy="115" r="4" fill="#1a1a1a"/>
+  <!-- Decorative lines -->
+  <path d="M65 145 Q100 165 135 145" stroke-width="1"/>
+  <path d="M70 155 Q100 172 130 155" stroke-width="1"/>
+  <!-- Dots -->
+  <circle cx="80" cy="95" r="2" fill="#1a1a1a"/>
+  <circle cx="120" cy="95" r="2" fill="#1a1a1a"/>
+  <circle cx="100" cy="150" r="2" fill="#1a1a1a"/>
+</svg>

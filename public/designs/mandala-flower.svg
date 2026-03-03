@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <circle cx="100" cy="100" r="8" fill="#1a1a1a"/>
+  <circle cx="100" cy="100" r="20" />
+  <circle cx="100" cy="100" r="35" />
+  <circle cx="100" cy="100" r="50" />
+  <!-- Petals inner ring -->
+  <g>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(0 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(45 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(90 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(135 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(180 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(225 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(270 100 100)"/>
+    <ellipse cx="100" cy="70" rx="8" ry="18" transform="rotate(315 100 100)"/>
+  </g>
+  <!-- Petals outer ring -->
+  <g>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(22.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(67.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(112.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(157.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(202.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(247.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(292.5 100 100)"/>
+    <ellipse cx="100" cy="55" rx="12" ry="25" transform="rotate(337.5 100 100)"/>
+  </g>
+  <!-- Dots -->
+  <circle cx="100" cy="40" r="2.5" fill="#1a1a1a"/>
+  <circle cx="142" cy="58" r="2.5" fill="#1a1a1a"/>
+  <circle cx="160" cy="100" r="2.5" fill="#1a1a1a"/>
+  <circle cx="142" cy="142" r="2.5" fill="#1a1a1a"/>
+  <circle cx="100" cy="160" r="2.5" fill="#1a1a1a"/>
+  <circle cx="58" cy="142" r="2.5" fill="#1a1a1a"/>
+  <circle cx="40" cy="100" r="2.5" fill="#1a1a1a"/>
+  <circle cx="58" cy="58" r="2.5" fill="#1a1a1a"/>
+</svg>

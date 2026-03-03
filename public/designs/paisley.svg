@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Main paisley shape -->
+  <path d="M120 30 Q170 60 150 120 Q130 170 80 170 Q30 170 40 120 Q50 80 80 70 Q110 60 120 30Z" />
+  <!-- Inner paisley -->
+  <path d="M115 50 Q150 75 135 120 Q120 155 80 155 Q50 155 55 120 Q60 90 85 82 Q105 75 115 50Z" />
+  <!-- Spiral -->
+  <path d="M100 70 Q120 80 110 100 Q100 115 85 110 Q70 105 78 92 Q85 82 100 70Z" />
+  <circle cx="95" cy="95" r="3" fill="#1a1a1a"/>
+  <!-- Decorative dots -->
+  <circle cx="70" cy="140" r="2" fill="#1a1a1a"/>
+  <circle cx="80" cy="148" r="2" fill="#1a1a1a"/>
+  <circle cx="92" cy="152" r="2" fill="#1a1a1a"/>
+  <circle cx="105" cy="148" r="2" fill="#1a1a1a"/>
+  <circle cx="115" cy="140" r="2" fill="#1a1a1a"/>
+  <!-- Leaf details -->
+  <path d="M130 45 Q145 35 150 45" stroke="#1a1a1a" stroke-width="1"/>
+  <path d="M155 70 Q165 60 168 72" stroke="#1a1a1a" stroke-width="1"/>
+</svg>

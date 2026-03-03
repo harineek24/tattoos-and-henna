@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#1a1a1a" stroke-width="1.5">
+  <!-- Main vine stem -->
+  <path d="M30 180 Q50 150 60 120 Q70 90 90 70 Q110 50 140 30" stroke-width="2"/>
+  <!-- Leaves -->
+  <path d="M55 135 Q40 120 35 105 Q50 115 55 135Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <path d="M70 105 Q85 90 95 80 Q85 100 70 105Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <path d="M65 100 Q50 85 45 70 Q55 82 65 100Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <path d="M100 65 Q115 55 125 42 Q115 60 100 65Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <path d="M95 72 Q80 58 75 42 Q88 55 95 72Z" fill="#1a1a1a" opacity="0.1" stroke="#1a1a1a"/>
+  <!-- Small curls -->
+  <path d="M45 155 Q35 150 38 140" stroke-width="1"/>
+  <path d="M80 88 Q90 82 92 72" stroke-width="1"/>
+  <path d="M115 52 Q125 48 128 38" stroke-width="1"/>
+  <!-- Dots / berries -->
+  <circle cx="38" cy="138" r="2" fill="#1a1a1a"/>
+  <circle cx="92" cy="70" r="2" fill="#1a1a1a"/>
+  <circle cx="130" cy="36" r="2" fill="#1a1a1a"/>
+</svg>
