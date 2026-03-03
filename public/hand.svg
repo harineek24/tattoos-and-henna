@@ -1,208 +1,144 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" fill="none">
   <defs>
-    <!-- Main skin fill -->
-    <radialGradient id="skin" cx="50%" cy="42%" r="55%">
+    <linearGradient id="skin" x1="0" y1="0" x2="0.3" y2="1">
       <stop offset="0%" stop-color="#f5d2b5"/>
-      <stop offset="60%" stop-color="#eabc98"/>
-      <stop offset="100%" stop-color="#d9a67e"/>
+      <stop offset="50%" stop-color="#eabc98"/>
+      <stop offset="100%" stop-color="#dba37c"/>
+    </linearGradient>
+    <radialGradient id="palm-depth" cx="48%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#e0a880" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#e0a880" stop-opacity="0"/>
     </radialGradient>
-    <!-- Slightly darker for overlapping finger bases -->
-    <radialGradient id="skin-shadow" cx="50%" cy="30%" r="60%">
-      <stop offset="0%" stop-color="#e8bc9a"/>
-      <stop offset="100%" stop-color="#d4a07a"/>
-    </radialGradient>
-    <!-- Soft inner shadow -->
-    <filter id="soft-shadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
-      <feOffset dx="0" dy="4" result="offset"/>
-      <feFlood flood-color="#000" flood-opacity="0.12" result="color"/>
-      <feComposite in="color" in2="offset" operator="in" result="shadow"/>
-      <feMerge>
-        <feMergeNode in="shadow"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="hand-shadow" x="-8%" y="-5%" width="116%" height="112%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.18"/>
     </filter>
   </defs>
 
-  <g filter="url(#soft-shadow)">
-    <!-- ==================== -->
-    <!--    PALM / WRIST       -->
-    <!-- ==================== -->
+  <!-- Main hand outline - single smooth path -->
+  <g filter="url(#hand-shadow)">
     <path d="
-      M 157,660
-      C 150,640 138,600 125,555
-      C 112,510 102,465 97,425
-      C 92,385 90,355 92,330
-      C 93,318 95,308 100,300
-      L 100,300
-      C 120,295 150,288 185,285
-      C 215,283 245,283 270,286
-      C 290,289 302,294 308,302
-      C 313,310 315,325 315,345
-      C 316,385 310,440 300,500
-      C 290,555 278,605 268,660
-      C 240,668 200,668 157,660
-      Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+      M 158,668
 
-    <!-- ==================== -->
-    <!--     PINKY FINGER      -->
-    <!-- ==================== -->
-    <path d="
-      M 100,300
-      C 98,285 95,265 92,240
-      C 89,215 87,192 86,175
-      C 85,155 87,142 92,135
-      C 97,128 104,127 111,130
-      C 118,133 122,142 124,158
-      C 126,175 127,195 127,220
-      C 127,245 126,270 125,295
-      C 120,298 112,300 100,300
-      Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+      C 150,645 138,605 125,558
+      C 112,510 104,465 98,425
+      C 93,390 90,360 92,338
+      C 93,322 95,310 98,302
 
-    <!-- ==================== -->
-    <!--    RING FINGER        -->
-    <!-- ==================== -->
-    <path d="
-      M 148,290
-      C 146,268 143,238 141,208
-      C 139,178 138,148 138,122
-      C 138,98 141,80 148,70
-      C 155,60 163,58 172,62
-      C 181,66 186,78 188,96
-      C 190,118 190,145 189,178
-      C 188,210 186,242 184,270
-      C 182,282 175,288 165,290
-      C 158,291 152,291 148,290
-      Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+      C 96,288 92,262 88,235
+      C 84,208 82,188 83,172
+      C 84,158 88,148 95,142
+      C 102,136 110,137 116,144
+      C 122,152 125,165 127,182
+      C 129,200 130,222 130,248
+      C 130,268 129,286 128,300
 
-    <!-- ==================== -->
-    <!--    MIDDLE FINGER      -->
-    <!-- ==================== -->
-    <path d="
-      M 198,285
-      C 196,260 194,228 193,195
-      C 192,162 191,128 192,98
-      C 193,70 196,48 203,36
-      C 210,24 219,22 228,28
-      C 237,34 242,48 244,70
-      C 246,95 247,128 246,165
-      C 245,200 244,235 242,265
-      C 240,278 235,285 228,287
-      C 218,289 208,288 198,285
-      Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+      C 133,308 140,312 148,308
 
-    <!-- ==================== -->
-    <!--    INDEX FINGER       -->
-    <!-- ==================== -->
-    <path d="
-      M 255,286
-      C 254,262 253,232 254,200
-      C 255,168 257,138 260,112
-      C 263,88 268,70 276,60
-      C 284,50 293,50 300,58
-      C 307,66 311,82 312,104
-      C 313,130 312,160 310,192
-      C 308,224 306,254 304,280
-      C 300,288 293,290 284,290
-      C 272,290 262,289 255,286
-      Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+      C 146,282 142,248 140,212
+      C 138,176 137,144 138,118
+      C 139,96 143,78 150,68
+      C 157,58 165,56 173,62
+      C 181,68 186,82 188,102
+      C 190,126 190,155 190,188
+      C 190,220 188,252 186,280
 
-    <!-- ==================== -->
-    <!--       THUMB           -->
-    <!-- ==================== -->
-    <path d="
-      M 308,302
-      C 312,290 318,275 326,260
-      C 336,242 348,226 358,218
-      C 368,210 376,210 382,218
-      C 388,226 388,240 384,258
-      C 380,276 372,296 362,315
-      C 352,334 342,348 332,358
-      C 324,365 318,365 314,358
-      C 310,348 308,332 308,302
+      C 192,290 200,294 208,290
+
+      C 206,258 204,218 203,178
+      C 202,138 202,102 204,74
+      C 206,50 212,34 220,26
+      C 228,18 236,20 242,30
+      C 248,42 252,60 253,82
+      C 254,108 254,142 254,178
+      C 254,215 252,252 250,282
+
+      C 256,292 264,296 272,292
+
+      C 270,262 268,224 268,186
+      C 268,148 270,116 274,92
+      C 278,70 284,56 292,50
+      C 300,44 308,48 312,60
+      C 316,72 318,90 318,112
+      C 318,140 316,172 314,205
+      C 312,238 310,266 308,288
+
+      C 310,312 312,332 316,348
+      C 320,360 326,368 334,372
+
+      C 344,375 356,368 366,354
+      C 376,340 384,322 388,304
+      C 390,290 388,278 382,272
+      C 376,266 370,268 364,276
+      C 356,288 348,306 340,326
+      C 334,342 328,355 324,365
+
+      C 320,375 316,390 312,410
+      C 306,445 298,488 288,535
+      C 278,580 268,625 260,665
+
+      C 230,674 192,674 158,668
       Z
-    " fill="url(#skin)" stroke="#cca080" stroke-width="1"/>
+    " fill="url(#skin)" stroke="#c8a080" stroke-width="1.2" stroke-linejoin="round"/>
   </g>
 
-  <!-- ==================== -->
-  <!--  FINGER JOINT LINES  -->
-  <!-- ==================== -->
-  <g stroke="#c09575" stroke-width="0.8" opacity="0.5" fill="none" stroke-linecap="round">
+  <!-- Palm depth shading -->
+  <ellipse cx="200" cy="400" rx="80" ry="100" fill="url(#palm-depth)"/>
+
+  <!-- Finger joint creases -->
+  <g stroke="#c49878" stroke-width="0.8" opacity="0.45" fill="none" stroke-linecap="round">
     <!-- Pinky joints -->
-    <path d="M 90,230 Q 100,226 118,230"/>
-    <path d="M 87,185 Q 98,181 120,185"/>
+    <path d="M 86,225 Q 100,220 122,225"/>
+    <path d="M 84,185 Q 98,180 124,185"/>
 
     <!-- Ring joints -->
-    <path d="M 141,200 Q 155,195 182,200"/>
-    <path d="M 140,140 Q 156,135 184,140"/>
+    <path d="M 140,200 Q 158,194 184,200"/>
+    <path d="M 139,140 Q 158,134 186,140"/>
 
     <!-- Middle joints -->
-    <path d="M 195,190 Q 212,185 240,190"/>
-    <path d="M 194,125 Q 213,120 242,125"/>
+    <path d="M 205,172 Q 222,166 248,172"/>
+    <path d="M 204,110 Q 222,104 250,110"/>
 
     <!-- Index joints -->
-    <path d="M 257,195 Q 273,190 305,195"/>
-    <path d="M 259,130 Q 276,125 308,130"/>
+    <path d="M 270,195 Q 286,189 312,195"/>
+    <path d="M 272,130 Q 288,124 314,130"/>
 
     <!-- Thumb joint -->
-    <path d="M 348,265 Q 360,258 378,265"/>
-
-    <!-- Knuckle line across palm top -->
-    <path d="M 100,300 Q 140,285 200,282 Q 260,283 308,302"/>
+    <path d="M 368,300 Q 378,292 386,300"/>
   </g>
 
-  <!-- ==================== -->
-  <!--      PALM LINES       -->
-  <!-- ==================== -->
-  <g stroke="#c09575" stroke-width="1" opacity="0.4" fill="none" stroke-linecap="round">
+  <!-- Palm lines -->
+  <g stroke="#c49878" stroke-width="1" opacity="0.35" fill="none" stroke-linecap="round">
     <!-- Heart line -->
-    <path d="M 100,360 Q 150,338 200,345 Q 250,350 305,340"/>
+    <path d="M 100,355 Q 155,332 210,340 Q 260,346 310,335"/>
     <!-- Head line -->
-    <path d="M 105,405 Q 155,388 210,392 Q 260,396 300,385"/>
+    <path d="M 105,400 Q 160,382 220,388 Q 270,392 305,382"/>
     <!-- Life line -->
-    <path d="M 295,330 Q 265,378 235,435 Q 210,490 185,545 Q 170,580 158,610"/>
+    <path d="M 300,330 Q 270,378 240,435 Q 215,492 190,548 Q 172,585 158,615"/>
     <!-- Fate line -->
-    <path d="M 215,520 Q 218,465 220,420 Q 222,380 220,340"/>
+    <path d="M 218,510 Q 220,455 222,410 Q 224,375 222,340"/>
   </g>
 
-  <!-- ==================== -->
-  <!--     WRIST CREASES     -->
-  <!-- ==================== -->
-  <g stroke="#c09575" stroke-width="0.8" opacity="0.35" fill="none" stroke-linecap="round">
-    <path d="M 160,642 Q 210,634 260,642"/>
-    <path d="M 155,654 Q 210,646 265,654"/>
+  <!-- Wrist creases -->
+  <g stroke="#c49878" stroke-width="0.7" opacity="0.3" fill="none" stroke-linecap="round">
+    <path d="M 162,645 Q 210,637 258,645"/>
+    <path d="M 158,658 Q 210,650 260,658"/>
   </g>
 
-  <!-- ==================== -->
-  <!--     FINGERNAILS       -->
-  <!-- ==================== -->
-  <g fill="#f2daca" stroke="#d4aa90" stroke-width="0.7" opacity="0.8">
-    <!-- Pinky nail -->
-    <ellipse cx="101" cy="138" rx="10" ry="8"/>
-    <!-- Ring nail -->
-    <ellipse cx="163" cy="70" rx="12" ry="9"/>
-    <!-- Middle nail -->
-    <ellipse cx="217" cy="34" rx="13" ry="10"/>
-    <!-- Index nail -->
-    <ellipse cx="287" cy="62" rx="12" ry="9"/>
-    <!-- Thumb nail -->
-    <ellipse cx="380" cy="222" rx="9" ry="11" transform="rotate(-30 380 222)"/>
+  <!-- Fingernails (subtle) -->
+  <g fill="#f0d4c0" stroke="#d4a890" stroke-width="0.6" opacity="0.7">
+    <ellipse cx="105" cy="148" rx="9" ry="7"/>
+    <ellipse cx="165" cy="68" rx="11" ry="8"/>
+    <ellipse cx="230" cy="32" rx="12" ry="9"/>
+    <ellipse cx="300" cy="56" rx="11" ry="8"/>
+    <ellipse cx="384" cy="278" rx="8" ry="10" transform="rotate(-25 384 278)"/>
   </g>
 
-  <!-- ==================== -->
-  <!--   SUBTLE HIGHLIGHTS   -->
-  <!-- ==================== -->
-  <g opacity="0.1" fill="white">
-    <ellipse cx="200" cy="400" rx="45" ry="65"/>
-    <ellipse cx="100" cy="210" rx="8" ry="25"/>
-    <ellipse cx="163" cy="155" rx="10" ry="30"/>
-    <ellipse cx="217" cy="135" rx="10" ry="35"/>
-    <ellipse cx="280" cy="155" rx="10" ry="30"/>
-    <ellipse cx="365" cy="260" rx="8" ry="20"/>
+  <!-- Subtle finger highlights -->
+  <g opacity="0.08" fill="white">
+    <ellipse cx="105" cy="200" rx="8" ry="30"/>
+    <ellipse cx="165" cy="160" rx="9" ry="40"/>
+    <ellipse cx="228" cy="140" rx="9" ry="45"/>
+    <ellipse cx="290" cy="160" rx="9" ry="40"/>
+    <ellipse cx="372" cy="310" rx="7" ry="20"/>
   </g>
 </svg>
