@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Stage, Layer, Image as KonvaImage, Transformer } from 'react-konva';
 import type Konva from 'konva';
 import type { PlacedDesign } from '../types';
@@ -8,6 +8,10 @@ interface HandCanvasProps {
   onUpdateDesign: (id: string, attrs: Partial<PlacedDesign>) => void;
   onDeleteDesign: (id: string) => void;
   onDropDesign: (imageUrl: string, x: number, y: number) => void;
+}
+
+export interface HandCanvasHandle {
+  getStage: () => Konva.Stage | null;
 }
 
 // Load an image and return it
@@ -95,17 +99,19 @@ function PlacedDesignImage({
   );
 }
 
-export default function HandCanvas({
-  placedDesigns,
-  onUpdateDesign,
-  onDeleteDesign,
-  onDropDesign,
-}: HandCanvasProps) {
+const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCanvas(
+  { placedDesigns, onUpdateDesign, onDeleteDesign, onDropDesign },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const handImage = useImage('/hand.svg');
+
+  useImperativeHandle(ref, () => ({
+    getStage: () => stageRef.current,
+  }));
 
   // Resize observer
   useEffect(() => {
@@ -230,4 +236,6 @@ export default function HandCanvas({
       )}
     </div>
   );
-}
+});
+
+export default HandCanvas;
