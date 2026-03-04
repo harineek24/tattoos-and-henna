@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { SharedCreation } from '../types';
-import { fetchCommunityCreations } from '../lib/designStore';
+import { fetchCommunityCreations, deleteCommunityCreation } from '../lib/designStore';
 
 interface CommunityGalleryProps {
   refreshTrigger: number;
@@ -33,6 +33,15 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent, creation: SharedCreation) => {
+    e.stopPropagation();
+    const ok = await deleteCommunityCreation(creation.id);
+    if (ok) {
+      setCreations((prev) => prev.filter((c) => c.id !== creation.id));
+      if (selectedImage?.id === creation.id) setSelectedImage(null);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex-1 overflow-y-auto p-2">
@@ -48,28 +57,44 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {creations.map((creation) => (
-              <button
+              <div
                 key={creation.id}
-                onClick={() => setSelectedImage(creation)}
                 className="rounded-xl bg-gray-50 border border-[var(--border)]
                            hover:border-[var(--accent)] hover:shadow-sm transition-all
-                           flex flex-col overflow-hidden text-left"
+                           flex flex-col overflow-hidden text-left group relative"
               >
-                <div className="aspect-[3/4] w-full bg-white flex items-center justify-center p-1">
-                  <img
-                    src={creation.image_url}
-                    alt={`Design by ${creation.author}`}
-                    className="w-full h-full object-contain"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="px-2 py-1.5 flex items-center justify-between w-full">
-                  <span className="text-xs text-[var(--text)] truncate font-medium">{creation.author}</span>
-                  <span className="text-[10px] text-[var(--text-muted)] shrink-0 ml-1">
-                    {formatDate(creation.created_at)}
-                  </span>
-                </div>
-              </button>
+                <button
+                  onClick={() => setSelectedImage(creation)}
+                  className="w-full text-left"
+                >
+                  <div className="aspect-[3/4] w-full bg-white flex items-center justify-center p-1">
+                    <img
+                      src={creation.image_url}
+                      alt={`Design by ${creation.author}`}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="px-2 py-1.5 flex items-center justify-between w-full">
+                    <span className="text-xs text-[var(--text)] truncate font-medium">{creation.author}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] shrink-0 ml-1">
+                      {formatDate(creation.created_at)}
+                    </span>
+                  </div>
+                </button>
+                {/* Delete button */}
+                <button
+                  onClick={(e) => handleDelete(e, creation)}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 hover:bg-red-500
+                             text-white flex items-center justify-center
+                             opacity-0 group-hover:opacity-100 transition-all"
+                  title="Delete"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -97,13 +122,22 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
                 <p className="text-sm font-medium text-[var(--text)]">By {selectedImage.author}</p>
                 <p className="text-xs text-[var(--text-muted)]">{formatDate(selectedImage.created_at)}</p>
               </div>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border)]
-                           hover:bg-gray-50 transition-colors text-[var(--text-muted)] font-medium"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => handleDelete(e, selectedImage)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-red-200
+                             hover:bg-red-50 transition-colors text-red-500 font-medium"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border)]
+                             hover:bg-gray-50 transition-colors text-[var(--text-muted)] font-medium"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

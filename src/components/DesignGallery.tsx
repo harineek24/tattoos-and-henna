@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import type { Design } from '../types';
-import { fetchDesigns } from '../lib/designStore';
+import { fetchDesigns, deleteDesign } from '../lib/designStore';
 
 interface DesignGalleryProps {
   refreshTrigger: number;
@@ -24,6 +24,15 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
   const handleDragStart = (e: React.DragEvent, design: Design) => {
     e.dataTransfer.setData('design-url', design.image_url);
     e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleDelete = async (e: React.MouseEvent, design: Design) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const ok = await deleteDesign(design.id);
+    if (ok) {
+      setDesigns((prev) => prev.filter((d) => d.id !== design.id));
+    }
   };
 
   return (
@@ -65,6 +74,20 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
                                 text-[var(--text-muted)]">
                   {design.name}
                 </div>
+                {/* Delete button — only for user-created designs (not seed) */}
+                {!design.id.startsWith('seed-') && (
+                  <button
+                    onClick={(e) => handleDelete(e, design)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 hover:bg-red-500
+                               text-white flex items-center justify-center
+                               opacity-0 group-hover:opacity-100 transition-all"
+                    title="Delete design"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>

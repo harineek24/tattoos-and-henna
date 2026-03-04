@@ -77,6 +77,27 @@ export async function saveDesign(name: string, dataUrl: string): Promise<Design 
   return design;
 }
 
+export async function deleteDesign(id: string): Promise<boolean> {
+  // Don't allow deleting seed designs
+  if (id.startsWith('seed-')) return false;
+
+  if (isNeonConfigured() && sql) {
+    try {
+      await sql`DELETE FROM designs WHERE id = ${id}`;
+      return true;
+    } catch (err) {
+      console.error('Neon delete error:', err);
+      return false;
+    }
+  }
+
+  const locals = getLocalDesigns();
+  const filtered = locals.filter((d) => d.id !== id);
+  if (filtered.length === locals.length) return false;
+  saveLocalDesigns(filtered);
+  return true;
+}
+
 // ─── Community / Shared Creations ───────────────────────────────────
 
 const getLocalCommunity = (): SharedCreation[] => {
@@ -155,4 +176,23 @@ export async function saveSharedCreation(author: string, dataUrl: string): Promi
   locals.unshift(creation);
   saveLocalCommunity(locals);
   return creation;
+}
+
+export async function deleteCommunityCreation(id: string): Promise<boolean> {
+  if (isNeonConfigured() && sql) {
+    await getCommunityTableReady();
+    try {
+      await sql`DELETE FROM shared_creations WHERE id = ${id}`;
+      return true;
+    } catch (err) {
+      console.error('Neon community delete error:', err);
+      return false;
+    }
+  }
+
+  const locals = getLocalCommunity();
+  const filtered = locals.filter((c) => c.id !== id);
+  if (filtered.length === locals.length) return false;
+  saveLocalCommunity(filtered);
+  return true;
 }
