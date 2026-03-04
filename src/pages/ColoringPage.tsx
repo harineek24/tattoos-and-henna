@@ -3,24 +3,28 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import PartySocket from 'partysocket';
 
-// ─── Henna & tattoo palette: whites, blacks, browns, reds (8 cols × 8 rows) ──
+// ─── Full color palette (8 cols × 10 rows = 80 colors) ──
 const COLORS = [
-  // Whites & creams
-  '#ffffff', '#fdfcfb', '#faf5ef', '#f5ede3', '#f0e6d8', '#ebe0cc', '#e6d9c1', '#dfd1b5',
-  // Light browns / beige
-  '#d4c5a9', '#c9b89c', '#bfab8f', '#b59e82', '#ab9175', '#a08468', '#96785c', '#8c6b50',
-  // Medium browns
-  '#8b6f47', '#7e6340', '#725a39', '#665032', '#5d4a2e', '#54412a', '#4b3826', '#422f22',
-  // Dark browns / espresso
-  '#3b291e', '#34231a', '#2d1e16', '#261912', '#1f140e', '#180f0a', '#120b07', '#0b0604',
-  // Warm reds / henna
-  '#e8c4b8', '#d4a08e', '#c07d65', '#b5684d', '#a64b33', '#963d28', '#862f1e', '#762114',
-  // Deep reds / maroon
-  '#6b1a10', '#5f150d', '#54100a', '#4a0c07', '#3f0805', '#350503', '#2b0302', '#200201',
-  // Grays (tattoo shading)
-  '#f0f0f0', '#d9d9d9', '#bfbfbf', '#a6a6a6', '#8c8c8c', '#737373', '#595959', '#404040',
-  // Blacks / charcoal
-  '#333333', '#2b2b2b', '#242424', '#1c1c1c', '#141414', '#0d0d0d', '#060606', '#000000',
+  // Neutrals
+  '#ffffff', '#f0f0f0', '#d9d9d9', '#bfbfbf', '#8c8c8c', '#595959', '#333333', '#000000',
+  // Warm browns / beiges
+  '#fff8e1', '#ffe0b2', '#f5d2b5', '#d4a07a', '#c9a87c', '#a67c52', '#8d5524', '#5d4037',
+  // Reds
+  '#ffcdd2', '#ef9a9a', '#e57373', '#f44336', '#e53935', '#d32f2f', '#c62828', '#b71c1c',
+  // Oranges
+  '#ffecd2', '#ffcc80', '#ffb74d', '#ff9800', '#fb8c00', '#f57c00', '#ef6c00', '#e65100',
+  // Yellows
+  '#fff9c4', '#fff59d', '#fff176', '#ffeb3b', '#fdd835', '#fbc02d', '#f9a825', '#f57f17',
+  // Greens
+  '#c8e6c9', '#a5d6a7', '#81c784', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20',
+  // Teals
+  '#b2dfdb', '#80cbc4', '#4db6ac', '#009688', '#00897b', '#00796b', '#00695c', '#004d40',
+  // Blues
+  '#bbdefb', '#90caf9', '#64b5f6', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1',
+  // Purples
+  '#e1bee7', '#ce93d8', '#ba68c8', '#9c27b0', '#8e24aa', '#7b1fa2', '#6a1b9a', '#4a148c',
+  // Pinks
+  '#f8bbd0', '#f48fb1', '#f06292', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#880e4f',
 ];
 
 // ─── B&W templates ──────────────────────────────────────────────
