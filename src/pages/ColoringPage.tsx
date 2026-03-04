@@ -160,6 +160,7 @@ export default function ColoringPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
@@ -396,9 +397,15 @@ export default function ColoringPage() {
     if (!canvas) return [0, 0];
     const rect = canvas.getBoundingClientRect();
     if ('touches' in e) {
-      return [e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top];
+      return [
+        (e.touches[0].clientX - rect.left) / zoom,
+        (e.touches[0].clientY - rect.top) / zoom,
+      ];
     }
-    return [e.clientX - rect.left, e.clientY - rect.top];
+    return [
+      (e.clientX - rect.left) / zoom,
+      (e.clientY - rect.top) / zoom,
+    ];
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -687,22 +694,34 @@ export default function ColoringPage() {
         {/* Canvas area */}
         <div
           ref={containerRef}
-          className="flex-1 min-w-0 relative bg-gray-50"
+          className="flex-1 min-w-0 relative bg-gray-50 overflow-hidden"
           style={{ cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'default' }}
         >
-          <canvas
-            ref={canvasRef}
-            width={canvasSize.width}
-            height={canvasSize.height}
-            className="touch-none"
-            onMouseDown={handlePointerDown}
-            onMouseMove={handlePointerMove}
-            onMouseUp={handlePointerUp}
-            onMouseLeave={handlePointerUp}
-            onTouchStart={handlePointerDown}
-            onTouchMove={handlePointerMove}
-            onTouchEnd={handlePointerUp}
-          />
+          <div
+            className="absolute inset-0 overflow-auto"
+          >
+            <canvas
+              ref={canvasRef}
+              width={canvasSize.width}
+              height={canvasSize.height}
+              className="touch-none"
+              style={{
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+                width: canvasSize.width,
+                height: canvasSize.height,
+                minWidth: canvasSize.width * zoom,
+                minHeight: canvasSize.height * zoom,
+              }}
+              onMouseDown={handlePointerDown}
+              onMouseMove={handlePointerMove}
+              onMouseUp={handlePointerUp}
+              onMouseLeave={handlePointerUp}
+              onTouchStart={handlePointerDown}
+              onTouchMove={handlePointerMove}
+              onTouchEnd={handlePointerUp}
+            />
+          </div>
 
           {/* Remote cursors */}
           {Object.entries(remoteCursors).map(([id, cursor]) => (
@@ -710,8 +729,8 @@ export default function ColoringPage() {
               key={id}
               className="absolute pointer-events-none z-20 flex flex-col items-center"
               style={{
-                left: cursor.x,
-                top: cursor.y,
+                left: cursor.x * zoom,
+                top: cursor.y * zoom,
                 transform: 'translate(-4px, -4px)',
               }}
             >
@@ -912,6 +931,46 @@ export default function ColoringPage() {
                     <path d="M21 13a9 9 0 1 0-2-7.7L21 7" />
                   </svg>
                   Redo
+                </button>
+              </div>
+            </div>
+
+            {/* Zoom */}
+            <div className="p-3 border-b border-[var(--border)]">
+              <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Zoom</h3>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setZoom((z) => Math.max(0.25, z - 0.25))}
+                  className="flex-1 flex items-center justify-center py-1.5 rounded-lg text-xs font-medium
+                             text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-all border border-[var(--border)]"
+                  title="Zoom out"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M8 11h6" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setZoom(1)}
+                  className="flex-1 flex items-center justify-center py-1.5 rounded-lg text-xs font-medium
+                             text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-all border border-[var(--border)]"
+                  title="Reset zoom"
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button
+                  onClick={() => setZoom((z) => Math.min(4, z + 0.25))}
+                  className="flex-1 flex items-center justify-center py-1.5 rounded-lg text-xs font-medium
+                             text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-all border border-[var(--border)]"
+                  title="Zoom in"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M11 8v6" />
+                    <path d="M8 11h6" />
+                  </svg>
                 </button>
               </div>
             </div>
