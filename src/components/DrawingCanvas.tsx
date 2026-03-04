@@ -138,65 +138,52 @@ export default function DrawingCanvas() {
         </div>
       </div>
 
-      {/* Main area: swatch palette + canvas side by side */}
-      <div className="flex-1 flex min-h-0">
-        {/* Color swatches (eyeshadow palette) */}
-        <div className="w-[140px] shrink-0 border-r border-[var(--border)] overflow-y-auto p-1.5">
-          {/* Selected color preview */}
-          <div className="flex items-center gap-1.5 mb-1.5 px-0.5">
-            <div
-              className="w-5 h-5 rounded shadow-inner"
-              style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
-            />
-            <span className="text-[9px] text-[var(--text-muted)] font-mono uppercase">{brushColor}</span>
-          </div>
-          {/* Swatch grid */}
-          <div className="grid grid-cols-8 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
-            {COLORS.map((c, i) => (
-              <button
-                key={`${c}-${i}`}
-                onClick={() => setBrushColor(c)}
-                className={`aspect-square transition-all relative ${
-                  brushColor === c
-                    ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
-                    : 'hover:scale-105 hover:z-10'
-                }`}
-                style={{ backgroundColor: c }}
-                title={c}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Canvas area */}
-        <div
-          ref={containerRef}
-          className="flex-1 min-w-0 drawing-active relative bg-gray-50"
-        >
-          {/* Transparency checkerboard */}
+      {/* Full-width color swatches (eyeshadow palette) */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-3">
+        {/* Selected color preview */}
+        <div className="flex items-center gap-2 mb-2">
           <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage:
-                'linear-gradient(45deg, #999 25%, transparent 25%), linear-gradient(-45deg, #999 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #999 75%), linear-gradient(-45deg, transparent 75%, #999 75%)',
-              backgroundSize: '16px 16px',
-              backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
-            }}
+            className="w-7 h-7 rounded-lg shadow-inner"
+            style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
           />
-          <canvas
-            ref={canvasRef}
-            width={canvasSize.width}
-            height={canvasSize.height}
-            className="relative z-10 touch-none"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseLeave={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
+          <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{brushColor}</span>
         </div>
+        {/* Swatch grid — 10 columns to fill width */}
+        <div className="grid grid-cols-10 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
+          {COLORS.map((c, i) => (
+            <button
+              key={`${c}-${i}`}
+              onClick={() => setBrushColor(c)}
+              className={`aspect-square transition-all relative ${
+                brushColor === c
+                  ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
+                  : 'hover:scale-105 hover:z-10'
+              }`}
+              style={{ backgroundColor: c }}
+              title={c}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Hidden canvas for drawing (used for custom design export) */}
+      <div
+        ref={containerRef}
+        className="hidden"
+      >
+        <canvas
+          ref={canvasRef}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="touch-none"
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+        />
       </div>
     </div>
   );
