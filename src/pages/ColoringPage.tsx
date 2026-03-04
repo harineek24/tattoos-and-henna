@@ -40,6 +40,7 @@ const TEMPLATES = [
 ];
 
 type Tool = 'brush' | 'fill' | 'eraser';
+type BrushType = 'round' | 'square' | 'calligraphy' | 'spray';
 
 interface StrokeEvent {
   type: 'stroke';
@@ -47,6 +48,8 @@ interface StrokeEvent {
   color: string;
   size: number;
   tool: Tool;
+  brushType?: BrushType;
+  opacity?: number;
 }
 
 interface FillEvent {
@@ -150,6 +153,8 @@ export default function ColoringPage() {
   const [color, setColor] = useState('#e53935');
   const [brushSize, setBrushSize] = useState(4);
   const [tool, setTool] = useState<Tool>('brush');
+  const [brushType, setBrushType] = useState<BrushType>('round');
+  const [opacity, setOpacity] = useState(100);
   const [isDrawing, setIsDrawing] = useState(false);
   const [roomId, setRoomId] = useState(roomParam || '');
   const [connected, setConnected] = useState(false);
@@ -335,17 +340,54 @@ export default function ColoringPage() {
 
     switch (event.type) {
       case 'stroke': {
-        ctx.strokeStyle = event.tool === 'eraser' ? '#ffffff' : event.color;
-        ctx.lineWidth = event.size;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        if (event.points.length > 0) {
-          ctx.moveTo(event.points[0][0], event.points[0][1]);
-          for (let i = 1; i < event.points.length; i++) {
-            ctx.lineTo(event.points[i][0], event.points[i][1]);
+        const strokeColor = event.tool === 'eraser' ? '#ffffff' : event.color;
+        const bt = event.brushType || 'round';
+        const alpha = event.tool === 'eraser' ? 1 : (event.opacity ?? 100) / 100;
+
+        if (bt === 'spray' && event.tool !== 'eraser') {
+          ctx.fillStyle = strokeColor;
+          ctx.globalAlpha = alpha * 0.3;
+          for (const [px, py] of event.points) {
+            const density = Math.floor(event.size * 2);
+            const radius = event.size * 1.5;
+            for (let i = 0; i < density; i++) {
+              const angle = Math.random() * Math.PI * 2;
+              const r = Math.random() * radius;
+              ctx.fillRect(px + r * Math.cos(angle), py + r * Math.sin(angle), 1, 1);
+            }
           }
-          ctx.stroke();
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = strokeColor;
+          ctx.lineWidth = event.size;
+          switch (bt) {
+            case 'round':
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+              break;
+            case 'square':
+              ctx.lineCap = 'square';
+              ctx.lineJoin = 'miter';
+              break;
+            case 'calligraphy':
+              ctx.lineCap = 'butt';
+              ctx.lineJoin = 'bevel';
+              ctx.lineWidth = event.size * 0.4;
+              break;
+            default:
+              ctx.lineCap = 'round';
+              ctx.lineJoin = 'round';
+          }
+          ctx.beginPath();
+          if (event.points.length > 0) {
+            ctx.moveTo(event.points[0][0], event.points[0][1]);
+            for (let i = 1; i < event.points.length; i++) {
+              ctx.lineTo(event.points[i][0], event.points[i][1]);
+            }
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
         }
         break;
       }
@@ -408,6 +450,45 @@ export default function ColoringPage() {
     ];
   };
 
+  const applyBrushStyle = (ctx: CanvasRenderingContext2D, bt: BrushType, size: number, strokeColor: string, alpha: number) => {
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = size;
+    switch (bt) {
+      case 'round':
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        break;
+      case 'square':
+        ctx.lineCap = 'square';
+        ctx.lineJoin = 'miter';
+        break;
+      case 'calligraphy':
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'bevel';
+        // Calligraphy uses a narrower horizontal width
+        ctx.lineWidth = size * 0.4;
+        break;
+      case 'spray':
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        break;
+    }
+  };
+
+  const drawSpray = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, sprayColor: string, alpha: number) => {
+    const density = Math.floor(size * 2);
+    const radius = size * 1.5;
+    ctx.globalAlpha = alpha * 0.3;
+    ctx.fillStyle = sprayColor;
+    for (let i = 0; i < density; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.random() * radius;
+      ctx.fillRect(x + r * Math.cos(angle), y + r * Math.sin(angle), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+  };
+
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
     const [x, y] = getPos(e);
 
@@ -430,12 +511,17 @@ export default function ColoringPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : color;
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+
+    const strokeColor = tool === 'eraser' ? '#ffffff' : color;
+    const alpha = tool === 'eraser' ? 1 : opacity / 100;
+
+    if (brushType === 'spray' && tool !== 'eraser') {
+      drawSpray(ctx, x, y, brushSize, strokeColor, alpha);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      applyBrushStyle(ctx, tool === 'eraser' ? 'round' : brushType, brushSize, strokeColor, alpha);
+    }
   };
 
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
@@ -457,19 +543,31 @@ export default function ColoringPage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    const strokeColor = tool === 'eraser' ? '#ffffff' : color;
+    const alpha = tool === 'eraser' ? 1 : opacity / 100;
+
+    if (brushType === 'spray' && tool !== 'eraser') {
+      drawSpray(ctx, x, y, brushSize, strokeColor, alpha);
+    } else {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
     strokeBuffer.current.push([x, y]);
   };
 
   const handlePointerUp = () => {
     if (isDrawing && strokeBuffer.current.length > 0) {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx) ctx.globalAlpha = 1;
       broadcast({
         type: 'stroke',
         points: strokeBuffer.current,
         color,
         size: brushSize,
         tool,
+        brushType,
+        opacity,
       });
     }
     setIsDrawing(false);
@@ -888,9 +986,39 @@ export default function ColoringPage() {
                 ))}
               </div>
 
+              {/* Brush types */}
+              {tool !== 'fill' && (
+                <div className="mt-3">
+                  <span className="text-[10px] text-[var(--text-muted)] font-medium mb-1.5 block">Brush Type</span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {([
+                      ['round', '●', 'Round'],
+                      ['square', '■', 'Flat'],
+                      ['calligraphy', '/', 'Calligraphy'],
+                      ['spray', '✦', 'Spray'],
+                    ] as [BrushType, string, string][]).map(([bt, icon, label]) => (
+                      <button
+                        key={bt}
+                        onClick={() => setBrushType(bt)}
+                        className={`flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[10px] transition-all ${
+                          brushType === bt
+                            ? 'bg-[var(--accent-light)] ring-1 ring-[var(--accent)] text-[var(--accent)] font-semibold'
+                            : 'hover:bg-gray-100 text-[var(--text-muted)]'
+                        }`}
+                        title={label}
+                      >
+                        <span className="text-sm leading-none">{icon}</span>
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Brush sizes */}
               {tool !== 'fill' && (
                 <div className="mt-3">
+                  <span className="text-[10px] text-[var(--text-muted)] font-medium mb-1.5 block">Size</span>
                   <div className="flex items-center justify-between gap-1 mb-2">
                     {[1, 3, 6, 10, 16, 24].map((s) => (
                       <button
@@ -920,6 +1048,32 @@ export default function ColoringPage() {
                       className="flex-1 accent-[var(--accent)]"
                     />
                     <span className="text-[10px] text-[var(--text-muted)] w-7">{brushSize}px</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Opacity */}
+              {tool !== 'fill' && (
+                <div className="mt-3">
+                  <span className="text-[10px] text-[var(--text-muted)] font-medium mb-1.5 block">Opacity</span>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded border border-[var(--border)]"
+                      style={{
+                        backgroundColor: color,
+                        opacity: opacity / 100,
+                      }}
+                    />
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      step="5"
+                      value={opacity}
+                      onChange={(e) => setOpacity(Number(e.target.value))}
+                      className="flex-1 accent-[var(--accent)]"
+                    />
+                    <span className="text-[10px] text-[var(--text-muted)] w-7">{opacity}%</span>
                   </div>
                 </div>
               )}
