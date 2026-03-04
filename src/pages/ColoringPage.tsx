@@ -148,6 +148,38 @@ export default function ColoringPage() {
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
+  const undoStack = useRef<ImageData[]>([]);
+
+  const saveSnapshot = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    undoStack.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (undoStack.current.length > 50) undoStack.current.shift();
+  };
+
+  const undo = useCallback(() => {
+    const snapshot = undoStack.current.pop();
+    if (!snapshot) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.putImageData(snapshot, 0, 0);
+  }, []);
+
+  // Ctrl+Z listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo]);
 
   // Resize canvas to fit container
   useEffect(() => {
@@ -283,11 +315,13 @@ export default function ColoringPage() {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      saveSnapshot();
       floodFill(ctx, x, y, color);
       broadcast({ type: 'fill', x, y, color });
       return;
     }
 
+    saveSnapshot();
     setIsDrawing(true);
     strokeBuffer.current = [[x, y]];
 
@@ -348,6 +382,8 @@ export default function ColoringPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    saveSnapshot();
 
     const img = new Image();
     // Only set crossOrigin for non-data URLs
@@ -426,6 +462,7 @@ export default function ColoringPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    saveSnapshot();
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };

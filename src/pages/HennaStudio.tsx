@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import HandCanvas from '../components/HandCanvas';
@@ -11,6 +11,7 @@ import type { PlacedDesign } from '../types';
 
 export default function HennaStudio() {
   const [placedDesigns, setPlacedDesigns] = useState<PlacedDesign[]>([]);
+  const historyRef = useRef<PlacedDesign[][]>([]);
   const [communityRefresh, setCommunityRefresh] = useState(0);
   const handCanvasRef = useRef<HandCanvasHandle>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
@@ -18,7 +19,35 @@ export default function HennaStudio() {
   const [savingToCommunity, setSavingToCommunity] = useState(false);
   const [authorName, setAuthorName] = useState('');
 
+  const pushHistory = useCallback(() => {
+    setPlacedDesigns((current) => {
+      historyRef.current.push([...current]);
+      if (historyRef.current.length > 50) historyRef.current.shift();
+      return current;
+    });
+  }, []);
+
+  const undo = useCallback(() => {
+    const prev = historyRef.current.pop();
+    if (prev !== undefined) {
+      setPlacedDesigns(prev);
+    }
+  }, []);
+
+  // Ctrl+Z listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo]);
+
   const handleDropDesign = useCallback((imageUrl: string, x: number, y: number) => {
+    pushHistory();
     const newDesign: PlacedDesign = {
       id: uuidv4(),
       designId: '',
@@ -30,17 +59,19 @@ export default function HennaStudio() {
       rotation: 0,
     };
     setPlacedDesigns((prev) => [...prev, newDesign]);
-  }, []);
+  }, [pushHistory]);
 
   const handleUpdateDesign = useCallback((id: string, attrs: Partial<PlacedDesign>) => {
+    pushHistory();
     setPlacedDesigns((prev) =>
       prev.map((d) => (d.id === id ? { ...d, ...attrs } : d))
     );
-  }, []);
+  }, [pushHistory]);
 
   const handleDeleteDesign = useCallback((id: string) => {
+    pushHistory();
     setPlacedDesigns((prev) => prev.filter((d) => d.id !== id));
-  }, []);
+  }, [pushHistory]);
 
   const handleSaveToCommunity = useCallback(async () => {
     const dataUrl = getStageDataUrl();
@@ -169,7 +200,7 @@ export default function HennaStudio() {
                 )}
               </div>
               <button
-                onClick={() => setPlacedDesigns([])}
+                onClick={() => { pushHistory(); setPlacedDesigns([]); }}
                 className="px-2 py-1 text-red-400 font-bold hover:text-red-300 transition-colors"
               >
                 Clear
