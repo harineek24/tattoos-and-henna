@@ -227,7 +227,6 @@ export default function ColoringPage() {
 
     const ws = new PartySocket({
       host: partyHost,
-      party: 'coloring',
       room: id,
       id: myId.current,
       maxRetries: 3,
