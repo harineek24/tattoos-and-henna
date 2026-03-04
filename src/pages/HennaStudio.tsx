@@ -149,10 +149,10 @@ export default function HennaStudio() {
             Color & Henna
           </h1>
           <nav className="flex items-center gap-2 text-xs">
-            <span className="text-[var(--accent)] font-semibold px-2 py-1 bg-[var(--accent-light)] rounded-full">Henna</span>
-            <Link to="/color" className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
+            <Link to="/" className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
               Coloring
             </Link>
+            <span className="text-[var(--accent)] font-semibold px-2 py-1 bg-[var(--accent-light)] rounded-full">Henna</span>
           </nav>
         </div>
 

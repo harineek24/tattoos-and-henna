@@ -6,8 +6,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HennaStudio />} />
-        <Route path="/color" element={<ColoringPage />} />
+        <Route path="/" element={<ColoringPage />} />
+        <Route path="/henna" element={<HennaStudio />} />
       </Routes>
     </BrowserRouter>
   );
