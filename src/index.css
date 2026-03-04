@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg-dark: #0f0f0f;
-  --bg-panel: #1a1a1a;
-  --accent: #c9a87c;
-  --accent-hover: #e0c49a;
-  --text: #e8e8e8;
-  --text-muted: #888;
-  --border: #2a2a2a;
+  --bg-dark: #faf9f7;
+  --bg-panel: #ffffff;
+  --accent: #8b6f47;
+  --accent-hover: #725a39;
+  --accent-light: #f0e8dc;
+  --text: #2c2c2c;
+  --text-muted: #999;
+  --border: #e8e4df;
 }
 
 * {
@@ -26,13 +27,15 @@ body {
   background-color: var(--bg-dark);
   color: var(--text);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-panel);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
@@ -49,10 +52,24 @@ body {
 @keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

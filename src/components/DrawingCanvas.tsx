@@ -8,7 +8,6 @@ export default function DrawingCanvas() {
   const [brushColor, setBrushColor] = useState('#000000');
   const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
 
-  // Resize canvas to fit container
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -25,8 +24,6 @@ export default function DrawingCanvas() {
     return () => observer.disconnect();
   }, []);
 
-  // Redraw white background is NOT needed — we want transparency
-  // But we need to clear the canvas when size changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -91,33 +88,31 @@ export default function DrawingCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  const colors = ['#000000', '#1a1a2e', '#6b2fa0', '#c9a87c', '#d4380d', '#237804', '#0050b3', '#8c8c8c'];
+  const colors = ['#000000', '#434343', '#8b6f47', '#e53935', '#ff7043', '#22c55e', '#3b82f6', '#9ca3af'];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
-        <h2 className="text-sm font-semibold tracking-wide uppercase text-[var(--accent)]">
+        <h2 className="text-xs font-semibold text-[var(--accent)]">
           Draw Your Own
         </h2>
       </div>
 
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] flex-wrap">
-        {/* Colors */}
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           {colors.map((c) => (
             <button
               key={c}
               onClick={() => setBrushColor(c)}
-              className={`w-5 h-5 rounded-full border-2 transition-transform ${
-                brushColor === c ? 'border-[var(--accent)] scale-125' : 'border-[var(--border)]'
+              className={`w-5 h-5 rounded-full transition-all ${
+                brushColor === c ? 'ring-2 ring-[var(--accent)] ring-offset-1 scale-110' : 'hover:scale-110'
               }`}
               style={{ backgroundColor: c }}
             />
           ))}
         </div>
 
-        {/* Brush size */}
         <input
           type="range"
           min="1"
@@ -128,11 +123,10 @@ export default function DrawingCanvas() {
         />
         <span className="text-[10px] text-[var(--text-muted)] w-5">{brushSize}px</span>
 
-        {/* Clear */}
         <button
           onClick={clearCanvas}
-          className="ml-auto text-xs px-2 py-1 text-[var(--text-muted)] font-bold
-                     hover:text-red-400 transition-colors"
+          className="ml-auto text-xs px-2 py-1 text-[var(--text-muted)] font-medium
+                     hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
         >
           Clear
         </button>
@@ -141,14 +135,14 @@ export default function DrawingCanvas() {
       {/* Canvas area */}
       <div
         ref={containerRef}
-        className="flex-1 min-h-0 bg-white/5 drawing-active relative"
+        className="flex-1 min-h-0 drawing-active relative bg-gray-50"
       >
         {/* Transparency checkerboard */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-10"
           style={{
             backgroundImage:
-              'linear-gradient(45deg, #333 25%, transparent 25%), linear-gradient(-45deg, #333 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #333 75%), linear-gradient(-45deg, transparent 75%, #333 75%)',
+              'linear-gradient(45deg, #999 25%, transparent 25%), linear-gradient(-45deg, #999 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #999 75%), linear-gradient(-45deg, transparent 75%, #999 75%)',
             backgroundSize: '16px 16px',
             backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
           }}
@@ -167,7 +161,6 @@ export default function DrawingCanvas() {
           onTouchEnd={stopDrawing}
         />
       </div>
-
     </div>
   );
 }

@@ -34,7 +34,7 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       <div className="flex-1 overflow-y-auto p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full text-[var(--text-muted)] text-sm">
@@ -42,9 +42,8 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
           </div>
         ) : creations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-[var(--text-muted)] text-sm text-center px-4 gap-2">
-            <span className="text-2xl">&#x1f3a8;</span>
             <p>No community designs yet.</p>
-            <p className="text-xs">Place some designs on the hand, then click &quot;Save to Community&quot; to share!</p>
+            <p className="text-xs">Place some designs on the hand, then click &quot;Share&quot; to share!</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
@@ -52,11 +51,11 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
               <button
                 key={creation.id}
                 onClick={() => setSelectedImage(creation)}
-                className="rounded-lg bg-[#1e1e1e] border border-[var(--border)]
-                           hover:border-[var(--accent)] transition-colors
+                className="rounded-xl bg-gray-50 border border-[var(--border)]
+                           hover:border-[var(--accent)] hover:shadow-sm transition-all
                            flex flex-col overflow-hidden text-left"
               >
-                <div className="aspect-[3/4] w-full bg-[#151515] flex items-center justify-center p-1">
+                <div className="aspect-[3/4] w-full bg-white flex items-center justify-center p-1">
                   <img
                     src={creation.image_url}
                     alt={`Design by ${creation.author}`}
@@ -65,7 +64,7 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
                   />
                 </div>
                 <div className="px-2 py-1.5 flex items-center justify-between w-full">
-                  <span className="text-xs text-[var(--text)] truncate">{creation.author}</span>
+                  <span className="text-xs text-[var(--text)] truncate font-medium">{creation.author}</span>
                   <span className="text-[10px] text-[var(--text-muted)] shrink-0 ml-1">
                     {formatDate(creation.created_at)}
                   </span>
@@ -79,14 +78,14 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
       {/* Lightbox modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-8"
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 md:p-8 animate-[fadeIn_0.2s_ease-out]"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="relative max-w-lg w-full bg-[var(--bg-panel)] rounded-xl overflow-hidden border border-[var(--border)]"
+            className="relative max-w-lg w-full bg-white rounded-2xl overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-[#111] flex items-center justify-center p-4">
+            <div className="bg-gray-50 flex items-center justify-center p-4">
               <img
                 src={selectedImage.image_url}
                 alt={`Design by ${selectedImage.author}`}
@@ -100,8 +99,8 @@ export default function CommunityGallery({ refreshTrigger }: CommunityGalleryPro
               </div>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="text-xs px-3 py-1.5 rounded border border-[var(--border)]
-                           hover:border-[var(--text-muted)] transition-colors text-[var(--text-muted)]"
+                className="text-xs px-3 py-1.5 rounded-lg border border-[var(--border)]
+                           hover:bg-gray-50 transition-colors text-[var(--text-muted)] font-medium"
               >
                 Close
               </button>

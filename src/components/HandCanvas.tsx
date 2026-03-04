@@ -14,7 +14,6 @@ export interface HandCanvasHandle {
   getStage: () => Konva.Stage | null;
 }
 
-// Load an image and return it
 function useImage(url: string): HTMLImageElement | null {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -27,7 +26,6 @@ function useImage(url: string): HTMLImageElement | null {
   return image;
 }
 
-// Individual design on the hand
 function PlacedDesignImage({
   design,
   isSelected,
@@ -113,7 +111,6 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
     getStage: () => stageRef.current,
   }));
 
-  // Resize observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -131,7 +128,6 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
     return () => observer.disconnect();
   }, []);
 
-  // Handle drop from gallery
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const stage = stageRef.current;
@@ -152,7 +148,6 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
     e.dataTransfer.dropEffect = 'copy';
   }, []);
 
-  // Deselect on clicking empty area
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleStageClick = (e: Konva.KonvaEventObject<any>) => {
     if (e.target === e.target.getStage() || e.target.name() === 'hand-image') {
@@ -160,7 +155,6 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
     }
   };
 
-  // Delete key support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
@@ -172,7 +166,6 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedId, onDeleteDesign]);
 
-  // Compute hand image sizing to fill the canvas area
   const handScale = handImage
     ? Math.min(
         dimensions.width / handImage.width,
@@ -185,7 +178,7 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
   return (
     <div
       ref={containerRef}
-      className="h-full w-full relative"
+      className="h-full w-full relative bg-gray-50"
       onDrop={handleDrop}
       onDragOver={handleDragOver}
     >
@@ -220,18 +213,17 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
         </Layer>
       </Stage>
 
-      {/* Instructions overlay */}
       {placedDesigns.length === 0 && (
-        <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
-          <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-[var(--text-muted)]">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-3 text-sm text-[var(--text-muted)] shadow-sm text-center">
             Drag a design from the gallery onto the hand
           </div>
         </div>
       )}
 
       {selectedId && (
-        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs text-[var(--text-muted)]">
-          Press Delete to remove · Drag corners to resize/rotate
+        <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[var(--text-muted)] shadow-sm">
+          Press Delete to remove
         </div>
       )}
     </div>

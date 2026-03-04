@@ -27,7 +27,7 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       <div className="flex items-center justify-end px-3 py-1.5 border-b border-[var(--border)]">
         <span className="text-xs text-[var(--text-muted)]">{designs.length} designs</span>
       </div>
@@ -48,9 +48,9 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
                 key={design.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, design)}
-                className="aspect-square rounded-lg bg-[#f5f0eb] border border-[var(--border)]
-                           hover:border-[var(--accent)] cursor-grab active:cursor-grabbing
-                           transition-colors flex items-center justify-center p-2 group relative"
+                className="aspect-square rounded-xl bg-gray-50 border border-[var(--border)]
+                           hover:border-[var(--accent)] hover:shadow-sm cursor-grab active:cursor-grabbing
+                           transition-all flex items-center justify-center p-2 group relative"
                 title={design.name}
               >
                 <img
@@ -60,8 +60,9 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
                   draggable={false}
                   loading="lazy"
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-black/70 text-[10px] text-center py-0.5
-                                rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate px-1">
+                <div className="absolute inset-x-0 bottom-0 bg-white/90 text-[10px] text-center py-0.5
+                                rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity truncate px-1
+                                text-[var(--text-muted)]">
                   {design.name}
                 </div>
               </div>

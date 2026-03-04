@@ -18,6 +18,7 @@ export default function HennaStudio() {
   const [activeTab, setActiveTab] = useState<'gallery' | 'community'>('gallery');
   const [savingToCommunity, setSavingToCommunity] = useState(false);
   const [authorName, setAuthorName] = useState('');
+  const [showActions, setShowActions] = useState(false);
 
   const pushHistory = useCallback(() => {
     setPlacedDesigns((current) => {
@@ -34,7 +35,6 @@ export default function HennaStudio() {
     }
   }, []);
 
-  // Ctrl+Z listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -84,6 +84,7 @@ export default function HennaStudio() {
       setCommunityRefresh((n) => n + 1);
       setActiveTab('community');
       setShareStatus('Saved to community!');
+      setShowActions(false);
       setTimeout(() => setShareStatus(null), 2500);
     }
   }, [authorName]);
@@ -142,78 +143,156 @@ export default function HennaStudio() {
   return (
     <div className="h-screen w-screen flex flex-col bg-[var(--bg-dark)]">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--border)] shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-[var(--accent)]">Color</span>
-            <span className="text-[var(--text-muted)]"> & </span>
-            <span className="text-[var(--accent)]">Henna</span>
+      <header className="flex items-center justify-between px-4 md:px-6 py-2.5 border-b border-[var(--border)] shrink-0 bg-white">
+        <div className="flex items-center gap-3 md:gap-4">
+          <h1 className="text-base md:text-lg font-semibold tracking-tight text-[var(--text)]">
+            Color & Henna
           </h1>
-          <nav className="flex items-center gap-3 text-xs">
-            <span className="text-[var(--accent)] font-bold">Henna</span>
-            <Link to="/color" className="text-[var(--text-muted)] hover:text-[var(--text)] font-bold transition-colors">
+          <nav className="flex items-center gap-2 text-xs">
+            <span className="text-[var(--accent)] font-semibold px-2 py-1 bg-[var(--accent-light)] rounded-full">Henna</span>
+            <Link to="/color" className="text-[var(--text-muted)] hover:text-[var(--text)] font-medium px-2 py-1 rounded-full hover:bg-gray-100 transition-colors">
               Coloring
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="text-[var(--text-muted)]">
-            {placedDesigns.length} design{placedDesigns.length !== 1 ? 's' : ''} placed
-          </span>
 
+        <div className="flex items-center gap-2">
           {placedDesigns.length > 0 && (
             <>
+              {/* Desktop actions */}
+              <span className="hidden md:inline text-xs text-[var(--text-muted)]">
+                {placedDesigns.length} design{placedDesigns.length !== 1 ? 's' : ''}
+              </span>
               <button
                 onClick={handleDownload}
-                className="px-2 py-1 text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
+                className="hidden md:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--accent)]
+                           hover:bg-[var(--accent-light)] rounded-lg transition-colors"
               >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="M7 10l5 5 5-5" />
+                  <path d="M12 15V3" />
+                </svg>
                 Download
               </button>
               <button
                 onClick={handleShare}
-                className="px-2 py-1 text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
+                className="hidden md:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--accent)]
+                           hover:bg-[var(--accent-light)] rounded-lg transition-colors"
               >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <path d="m16 6-4-4-4 4" />
+                  <path d="M12 2v13" />
+                </svg>
                 Share
               </button>
-              <div className="flex items-center gap-1.5 relative">
+
+              {/* Save to Community (desktop) */}
+              <div className="hidden md:flex items-center gap-1.5 relative">
                 <input
                   type="text"
                   placeholder="Your name"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  className="w-24 text-xs bg-transparent border-b border-[var(--border)] px-1 py-1
-                             text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-24 text-xs bg-gray-50 border border-[var(--border)] rounded-lg px-2 py-1.5
+                             text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
                 />
                 <button
                   onClick={handleSaveToCommunity}
                   disabled={savingToCommunity}
-                  className="px-2 py-1 text-emerald-400 font-bold hover:text-emerald-300 transition-colors
-                             disabled:opacity-50 whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)]
+                             rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
-                  {savingToCommunity ? 'Saving...' : 'Save to Community'}
+                  {savingToCommunity ? 'Saving...' : 'Share'}
                 </button>
-                {shareStatus && (
-                  <span className="absolute -bottom-7 right-0 whitespace-nowrap
-                                   bg-green-600 text-white text-[10px] px-2 py-0.5 rounded z-10">
-                    {shareStatus}
-                  </span>
-                )}
               </div>
+
               <button
                 onClick={() => { pushHistory(); setPlacedDesigns([]); }}
-                className="px-2 py-1 text-red-400 font-bold hover:text-red-300 transition-colors"
+                className="hidden md:inline-flex p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
+                title="Clear all"
               >
-                Clear
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>
+              </button>
+
+              {/* Mobile actions menu */}
+              <button
+                onClick={() => setShowActions(!showActions)}
+                className="md:hidden p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="1" />
+                  <circle cx="19" cy="12" r="1" />
+                  <circle cx="5" cy="12" r="1" />
+                </svg>
               </button>
             </>
+          )}
+
+          {shareStatus && (
+            <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full font-medium">
+              {shareStatus}
+            </span>
           )}
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 flex min-h-0">
-        {/* Left — Hand Canvas */}
-        <div className="flex-[3] border-r border-[var(--border)] min-w-0">
+      {/* Mobile actions dropdown */}
+      {showActions && (
+        <div className="md:hidden bg-white border-b border-[var(--border)] px-4 py-3 flex flex-col gap-2 animate-[slideIn_0.2s_ease-out]">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownload}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium
+                         text-[var(--accent)] border border-[var(--border)] rounded-lg hover:bg-[var(--accent-light)] transition-colors"
+            >
+              Download
+            </button>
+            <button
+              onClick={handleShare}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium
+                         text-[var(--accent)] border border-[var(--border)] rounded-lg hover:bg-[var(--accent-light)] transition-colors"
+            >
+              Share
+            </button>
+            <button
+              onClick={() => { pushHistory(); setPlacedDesigns([]); }}
+              className="flex items-center justify-center px-3 py-2 text-xs font-medium
+                         text-red-500 border border-[var(--border)] rounded-lg hover:bg-red-50 transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Your name"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className="flex-1 text-xs bg-gray-50 border border-[var(--border)] rounded-lg px-3 py-2
+                         text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30"
+            />
+            <button
+              onClick={handleSaveToCommunity}
+              disabled={savingToCommunity}
+              className="px-3 py-2 text-xs font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)]
+                         rounded-lg transition-colors disabled:opacity-50"
+            >
+              {savingToCommunity ? 'Saving...' : 'Save to Community'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main content - stacks vertically on mobile, side-by-side on desktop */}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Hand Canvas */}
+        <div className="h-[50vh] md:h-auto md:flex-[3] border-b md:border-b-0 md:border-r border-[var(--border)] min-w-0">
           <HandCanvas
             ref={handCanvasRef}
             placedDesigns={placedDesigns}
@@ -223,23 +302,23 @@ export default function HennaStudio() {
           />
         </div>
 
-        {/* Right — Gallery/Community + Drawing */}
-        <div className="flex-[2] flex flex-col min-w-0 max-w-[480px]">
+        {/* Right panel — Gallery/Community + Drawing */}
+        <div className="flex-1 md:flex-[2] flex flex-col min-w-0 md:max-w-[480px]">
           {/* Tabs */}
-          <div className="flex border-b border-[var(--border)] shrink-0">
+          <div className="flex border-b border-[var(--border)] shrink-0 bg-white">
             <button
               onClick={() => setActiveTab('gallery')}
-              className={`flex-1 text-xs font-semibold tracking-wide uppercase py-2.5 transition-colors ${
+              className={`flex-1 text-xs font-medium tracking-wide py-2.5 transition-colors ${
                 activeTab === 'gallery'
                   ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)]'
               }`}
             >
-              Design Gallery
+              Designs
             </button>
             <button
               onClick={() => setActiveTab('community')}
-              className={`flex-1 text-xs font-semibold tracking-wide uppercase py-2.5 transition-colors ${
+              className={`flex-1 text-xs font-medium tracking-wide py-2.5 transition-colors ${
                 activeTab === 'community'
                   ? 'text-[var(--accent)] border-b-2 border-[var(--accent)]'
                   : 'text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -258,7 +337,7 @@ export default function HennaStudio() {
             )}
           </div>
 
-          {/* Bottom: Drawing */}
+          {/* Drawing */}
           <div className="flex-1 min-h-0 overflow-hidden">
             <DrawingCanvas />
           </div>

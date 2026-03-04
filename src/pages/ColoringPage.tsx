@@ -3,31 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import PartySocket from 'partysocket';
 
-// ─── Color palette ──────────────────────────────────────────────
+// ─── Curated color palette ──────────────────────────────────────
 const COLORS = [
-  // Row 1: basics
-  '#000000', '#ffffff', '#808080', '#c0c0c0',
-  // Row 2: reds
-  '#ff0000', '#cc0000', '#990000', '#ff6666',
-  // Row 3: oranges / browns
-  '#ff8800', '#cc6600', '#994400', '#ffbb66',
-  // Row 4: yellows
-  '#ffff00', '#cccc00', '#999900', '#ffff88',
-  // Row 5: greens
-  '#00ff00', '#00cc00', '#009900', '#66ff66',
-  // Row 6: cyans
-  '#00ffff', '#00cccc', '#009999', '#66ffff',
-  // Row 7: blues
-  '#0000ff', '#0000cc', '#000099', '#6666ff',
-  // Row 8: purples
-  '#9900ff', '#7700cc', '#550099', '#bb66ff',
-  // Row 9: pinks
-  '#ff00ff', '#cc00cc', '#990099', '#ff66ff',
-  // Row 10: skin tones / pastels
-  '#f5d2b5', '#d4a07a', '#8d5524', '#ffcccc',
+  '#000000', '#434343', '#9e9e9e', '#ffffff',
+  '#e53935', '#ff7043', '#ffb74d', '#fff176',
+  '#66bb6a', '#26a69a', '#42a5f5', '#5c6bc0',
+  '#ab47bc', '#ec407a', '#8d6e63', '#f5d2b5',
 ];
 
-// ─── B&W template thumbnails ─────────────────────────────────────
+// ─── B&W templates ──────────────────────────────────────────────
 const TEMPLATES = [
   { id: 'mandala', name: 'Mandala', url: '/designs/mandala-flower.svg' },
   { id: 'lotus', name: 'Lotus', url: '/designs/lotus.svg' },
@@ -93,7 +77,6 @@ function floodFill(ctx: CanvasRenderingContext2D, startX: number, startY: number
   const sy = Math.round(startY);
   if (sx < 0 || sx >= width || sy < 0 || sy >= height) return;
 
-  // Parse fill color
   const tmp = document.createElement('canvas');
   tmp.width = tmp.height = 1;
   const tmpCtx = tmp.getContext('2d')!;
@@ -104,7 +87,6 @@ function floodFill(ctx: CanvasRenderingContext2D, startX: number, startY: number
   const targetIdx = (sy * width + sx) * 4;
   const tr = data[targetIdx], tg = data[targetIdx + 1], tb = data[targetIdx + 2], ta = data[targetIdx + 3];
 
-  // Don't fill if same color
   if (tr === fc[0] && tg === fc[1] && tb === fc[2] && ta === fc[3]) return;
 
   const tolerance = 32;
@@ -147,8 +129,9 @@ export default function ColoringPage() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
-  const [color, setColor] = useState('#ff0000');
+  const [color, setColor] = useState('#e53935');
   const [brushSize, setBrushSize] = useState(4);
   const [tool, setTool] = useState<Tool>('brush');
   const [isDrawing, setIsDrawing] = useState(false);
@@ -158,6 +141,8 @@ export default function ColoringPage() {
   const [userName, setUserName] = useState('');
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; color: string; name: string }>>({});
   const [toasts, setToasts] = useState<{ id: string; message: string }[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showMultiplayer, setShowMultiplayer] = useState(false);
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
@@ -190,7 +175,6 @@ export default function ColoringPage() {
     ctx.putImageData(snapshot, 0, 0);
   }, []);
 
-  // Ctrl+Z listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -202,7 +186,6 @@ export default function ColoringPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo]);
 
-  // Resize canvas to fit container
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -219,7 +202,6 @@ export default function ColoringPage() {
     return () => observer.disconnect();
   }, []);
 
-  // Fill canvas white on size change
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -257,6 +239,7 @@ export default function ColoringPage() {
       failCount = 0;
       setConnected(true);
       setConnectionError('');
+      setShowMultiplayer(false);
     });
 
     ws.addEventListener('close', () => {
@@ -290,7 +273,6 @@ export default function ColoringPage() {
     socketRef.current = ws;
     setRoomId(id);
 
-    // Update URL with room param
     const url = new URL(window.location.href);
     url.searchParams.set('room', id);
     window.history.replaceState({}, '', url.toString());
@@ -404,7 +386,6 @@ export default function ColoringPage() {
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
     const [x, y] = getPos(e);
 
-    // Send cursor position
     broadcast({
       type: 'cursor',
       id: myId.current,
@@ -450,7 +431,6 @@ export default function ColoringPage() {
     saveSnapshot();
 
     const img = new Image();
-    // Only set crossOrigin for non-data URLs
     if (!src.startsWith('data:')) {
       img.crossOrigin = 'anonymous';
     }
@@ -464,11 +444,9 @@ export default function ColoringPage() {
       const y = (canvas.height - h) / 2;
       ctx.drawImage(img, x, y, w, h);
 
-      // Broadcast to room
       broadcast({ type: 'image', dataUrl: canvas.toDataURL() });
     };
     img.onerror = () => {
-      // Retry without crossOrigin if it fails
       const retry = new Image();
       retry.onload = () => {
         ctx.fillStyle = '#ffffff';
@@ -495,7 +473,6 @@ export default function ColoringPage() {
       }
     };
     reader.readAsDataURL(file);
-    // Reset so the same file can be re-selected
     e.target.value = '';
   };
 
@@ -537,254 +514,368 @@ export default function ColoringPage() {
     if (!shareLink) return;
     try {
       await navigator.clipboard.writeText(shareLink);
+      showToast('Link copied!');
     } catch {
       // fallback
     }
   };
 
+  const toolBtn = (t: Tool, label: string, icon: React.ReactNode) => (
+    <button
+      key={t}
+      onClick={() => setTool(t)}
+      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+        tool === t
+          ? 'bg-[var(--accent)] text-white shadow-sm'
+          : 'text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)]'
+      }`}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+
   return (
-    <div className="h-screen w-screen flex flex-col bg-[var(--bg-dark)]">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--border)] shrink-0">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-[var(--accent)]">Color</span>
-            <span className="text-[var(--text-muted)]"> & </span>
-            <span className="text-[var(--accent)]">Henna</span>
-          </h1>
-          <nav className="flex items-center gap-3 text-xs">
-            <Link to="/" className="text-[var(--text-muted)] hover:text-[var(--text)] font-bold transition-colors">
-              Henna
-            </Link>
-            <span className="text-[var(--accent)] font-bold">Coloring</span>
-          </nav>
-        </div>
-        <div className="flex items-center gap-3 text-xs">
-          <button
-            onClick={handleDownload}
-            className="px-2 py-1 text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
-          >
-            Download
-          </button>
-          <button
-            onClick={clearCanvas}
-            className="px-2 py-1 text-red-400 font-bold hover:text-red-300 transition-colors"
-          >
-            Clear
-          </button>
-        </div>
+    <div className="h-screen w-screen flex flex-col bg-white">
+      {/* ─── Top bar ──────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] shrink-0 bg-white">
+        <Link
+          to="/"
+          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+          title="Back to Henna Studio"
+        >
+          <svg className="w-5 h-5 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </Link>
+
+        <h1 className="text-sm font-semibold text-[var(--text)] tracking-tight">Coloring</h1>
+
+        <button
+          onClick={() => setShowMultiplayer(!showMultiplayer)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            connected
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+              : 'border border-[var(--border)] text-[var(--text-muted)] hover:bg-gray-50'
+          }`}
+        >
+          {connected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+          {connected ? `Room` : 'Join Room'}
+        </button>
       </header>
 
-      <div className="flex-1 flex min-h-0">
-        {/* Left sidebar — tools + colors */}
-        <div className="w-56 border-r border-[var(--border)] flex flex-col overflow-y-auto shrink-0">
-          {/* Room / Multiplayer */}
-          <div className="p-3 border-b border-[var(--border)]">
-            <h3 className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Multiplayer</h3>
-            {!connected ? (
-              <div className="flex flex-col gap-2">
+      {/* ─── Multiplayer dropdown ─────────────────────────────── */}
+      {showMultiplayer && (
+        <div className="absolute top-12 right-3 z-40 bg-white rounded-xl shadow-xl border border-[var(--border)] p-4 w-72 animate-[slideIn_0.2s_ease-out]">
+          {!connected ? (
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Your name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="text-sm bg-gray-50 rounded-lg px-3 py-2 text-[var(--text)]
+                           placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 border border-[var(--border)]"
+              />
+              <button
+                onClick={handleCreateRoom}
+                className="text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)]
+                           rounded-lg px-3 py-2 transition-colors"
+              >
+                Create Room
+              </button>
+              {connectionError && (
+                <p className="text-xs text-red-500">{connectionError}</p>
+              )}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-px bg-[var(--border)]" />
+                <span className="text-[10px] text-[var(--text-muted)] uppercase">or join</span>
+                <div className="flex-1 h-px bg-[var(--border)]" />
+              </div>
+              <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Your name"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  className="text-xs bg-transparent border-b border-[var(--border)] px-1 py-1
-                             text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+                  placeholder="Room code"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  className="flex-1 text-sm bg-gray-50 rounded-lg px-3 py-2 text-[var(--text)]
+                             placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 border border-[var(--border)]"
                 />
                 <button
-                  onClick={handleCreateRoom}
-                  className="text-xs text-emerald-400 font-bold hover:text-emerald-300 transition-colors text-left"
+                  onClick={handleJoinRoom}
+                  className="text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]
+                             rounded-lg px-3 py-2 transition-colors border border-[var(--border)]"
                 >
-                  Create Room
-                </button>
-                {connectionError && (
-                  <p className="text-[10px] text-red-400">{connectionError}</p>
-                )}
-                <div className="flex gap-1">
-                  <input
-                    type="text"
-                    placeholder="Room code"
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                    className="flex-1 text-xs bg-transparent border-b border-[var(--border)] px-1 py-1
-                               text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
-                  />
-                  <button
-                    onClick={handleJoinRoom}
-                    className="text-xs text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
-                  >
-                    Join
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs text-emerald-400">Connected</span>
-                </div>
-                <div className="text-[10px] text-[var(--text-muted)] break-all">Room: {roomId}</div>
-                <button
-                  onClick={copyShareLink}
-                  className="text-xs text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors text-left mt-1"
-                >
-                  Copy invite link
+                  Join
                 </button>
               </div>
-            )}
-          </div>
-
-          {/* Tools */}
-          <div className="p-3 border-b border-[var(--border)]">
-            <h3 className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Tools</h3>
-            <div className="flex gap-2">
-              {([
-                ['brush', 'Brush'],
-                ['fill', 'Fill'],
-                ['eraser', 'Eraser'],
-              ] as [Tool, string][]).map(([t, label]) => (
-                <button
-                  key={t}
-                  onClick={() => setTool(t)}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    tool === t
-                      ? 'text-[var(--accent)] font-bold'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
             </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-sm text-emerald-600 font-medium">Connected</span>
+              </div>
+              <div className="text-xs text-[var(--text-muted)] bg-gray-50 rounded-lg px-3 py-2 break-all font-mono">
+                {roomId}
+              </div>
+              <button
+                onClick={copyShareLink}
+                className="text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]
+                           rounded-lg px-3 py-2 transition-colors border border-[var(--border)] mt-1"
+              >
+                Copy invite link
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── Canvas area ──────────────────────────────────────── */}
+      <div
+        ref={containerRef}
+        className="flex-1 min-h-0 relative bg-gray-50"
+        style={{ cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'default' }}
+      >
+        <canvas
+          ref={canvasRef}
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="touch-none"
+          onMouseDown={handlePointerDown}
+          onMouseMove={handlePointerMove}
+          onMouseUp={handlePointerUp}
+          onMouseLeave={handlePointerUp}
+          onTouchStart={handlePointerDown}
+          onTouchMove={handlePointerMove}
+          onTouchEnd={handlePointerUp}
+        />
+
+        {/* Remote cursors */}
+        {Object.entries(remoteCursors).map(([id, cursor]) => (
+          <div
+            key={id}
+            className="absolute pointer-events-none z-20 flex flex-col items-center"
+            style={{
+              left: cursor.x,
+              top: cursor.y,
+              transform: 'translate(-4px, -4px)',
+            }}
+          >
+            <div
+              className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
+              style={{ backgroundColor: cursor.color }}
+            />
+            <span className="text-[10px] text-white bg-black/50 px-1.5 rounded-full mt-0.5 whitespace-nowrap">
+              {cursor.name}
+            </span>
+          </div>
+        ))}
+
+        {/* Empty state hint */}
+        {!connected && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 text-sm text-[var(--text-muted)] shadow-sm text-center max-w-xs">
+              Pick a template or start drawing
+            </div>
+          </div>
+        )}
+
+        {/* Toast notifications */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-30 pointer-events-none">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className="bg-[var(--text)] text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg
+                         animate-[slideIn_0.3s_ease-out] whitespace-nowrap"
+            >
+              {toast.message}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Bottom toolbar ───────────────────────────────────── */}
+      <div className="shrink-0 border-t border-[var(--border)] bg-white">
+        {/* Color row */}
+        <div className="flex items-center gap-2 px-4 py-2.5 overflow-x-auto">
+          {COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              className={`w-8 h-8 rounded-full shrink-0 transition-all ${
+                color === c
+                  ? 'ring-2 ring-[var(--accent)] ring-offset-2 scale-110'
+                  : 'hover:scale-110'
+              }`}
+              style={{
+                backgroundColor: c,
+                border: c === '#ffffff' ? '1.5px solid #ddd' : 'none',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Tools + actions row */}
+        <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
+          {/* Left: tools */}
+          <div className="flex items-center gap-1">
+            {toolBtn('brush', 'Brush',
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              </svg>
+            )}
+            {toolBtn('fill', 'Fill',
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+              </svg>
+            )}
+            {toolBtn('eraser', 'Eraser',
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.9-9.9c1-1 2.5-1 3.4 0l3.3 3.3c1 1 1 2.5 0 3.4L9.4 21" />
+                <path d="M22 21H7" />
+              </svg>
+            )}
+
+            {/* Brush size */}
             {tool !== 'fill' && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1.5 ml-2">
                 <input
                   type="range"
                   min="1"
                   max="30"
                   value={brushSize}
                   onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="flex-1 accent-[var(--accent)]"
+                  className="w-16 sm:w-24 accent-[var(--accent)]"
                 />
-                <span className="text-[10px] text-[var(--text-muted)] w-7">{brushSize}px</span>
+                <span className="text-[10px] text-[var(--text-muted)] w-6">{brushSize}px</span>
               </div>
             )}
           </div>
 
-          {/* Colors */}
-          <div className="p-3 border-b border-[var(--border)]">
-            <h3 className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Colors</h3>
-            <div className="grid grid-cols-4 gap-1.5">
-              {COLORS.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded border-2 transition-transform ${
-                    color === c ? 'border-[var(--accent)] scale-110' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
+          {/* Right: actions */}
+          <div className="flex items-center gap-0.5">
+            {/* Templates */}
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
+              title="Templates"
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+              </svg>
+            </button>
+
+            {/* Upload */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
+              title="Upload image"
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <path d="m21 15-5-5L5 21" />
+              </svg>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleUpload}
+              className="hidden"
+            />
+
+            {/* Undo */}
+            <button
+              onClick={undo}
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
+              title="Undo"
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7v6h6" />
+                <path d="M3 13a9 9 0 1 0 2-7.7L3 7" />
+              </svg>
+            </button>
+
+            <div className="w-px h-5 bg-[var(--border)] mx-1" />
+
+            {/* Download */}
+            <button
+              onClick={handleDownload}
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
+              title="Download"
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M12 15V3" />
+              </svg>
+            </button>
+
+            {/* Clear */}
+            <button
+              onClick={clearCanvas}
+              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
+              title="Clear canvas"
+            >
+              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Templates modal ──────────────────────────────────── */}
+      {showTemplates && (
+        <div
+          className="fixed inset-0 z-50 bg-black/20 animate-[fadeIn_0.2s_ease-out]"
+          onClick={() => setShowTemplates(false)}
+        >
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl animate-[slideUp_0.3s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="text-base font-semibold text-[var(--text)]">Choose a Template</h3>
+              <button
+                onClick={() => setShowTemplates(false)}
+                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-[var(--text-muted)]"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          </div>
-
-          {/* Upload */}
-          <div className="p-3 border-b border-[var(--border)]">
-            <h3 className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Upload Image</h3>
-            <label className="text-xs text-[var(--text-muted)] font-bold hover:text-[var(--text)] transition-colors cursor-pointer">
-              Choose PNG/JPG...
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleUpload}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {/* Templates */}
-          <div className="p-3">
-            <h3 className="text-xs font-bold text-[var(--accent)] uppercase tracking-wide mb-2">Templates</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-4 gap-3 px-5 pb-6 max-h-[40vh] overflow-y-auto">
               {TEMPLATES.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => loadImageToCanvas(t.url)}
-                  className="aspect-square rounded bg-white border border-[var(--border)]
-                             hover:border-[var(--accent)] transition-colors flex items-center justify-center p-1"
+                  onClick={() => {
+                    loadImageToCanvas(t.url);
+                    setShowTemplates(false);
+                  }}
+                  className="aspect-square rounded-xl bg-gray-50 border border-[var(--border)]
+                             hover:border-[var(--accent)] hover:shadow-md transition-all
+                             flex flex-col items-center justify-center p-2 group"
                   title={t.name}
                 >
                   <img src={t.url} alt={t.name} className="w-full h-full object-contain" />
+                  <span className="text-[10px] text-[var(--text-muted)] mt-1 group-hover:text-[var(--accent)] transition-colors">
+                    {t.name}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Canvas area */}
-        <div
-          ref={containerRef}
-          className="flex-1 min-w-0 relative bg-[#1a1a1a]"
-          style={{ cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'default' }}
-        >
-          <canvas
-            ref={canvasRef}
-            width={canvasSize.width}
-            height={canvasSize.height}
-            className="touch-none"
-            onMouseDown={handlePointerDown}
-            onMouseMove={handlePointerMove}
-            onMouseUp={handlePointerUp}
-            onMouseLeave={handlePointerUp}
-            onTouchStart={handlePointerDown}
-            onTouchMove={handlePointerMove}
-            onTouchEnd={handlePointerUp}
-          />
-
-          {/* Remote cursors */}
-          {Object.entries(remoteCursors).map(([id, cursor]) => (
-            <div
-              key={id}
-              className="absolute pointer-events-none z-20 flex flex-col items-center"
-              style={{
-                left: cursor.x,
-                top: cursor.y,
-                transform: 'translate(-4px, -4px)',
-              }}
-            >
-              <div
-                className="w-3 h-3 rounded-full border-2 border-white"
-                style={{ backgroundColor: cursor.color }}
-              />
-              <span className="text-[10px] text-white bg-black/60 px-1 rounded mt-0.5 whitespace-nowrap">
-                {cursor.name}
-              </span>
-            </div>
-          ))}
-
-          {/* Empty state */}
-          {!connected && (
-            <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
-              <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 text-sm text-[var(--text-muted)]">
-                Pick a template, upload an image, or create a room to color together
-              </div>
-            </div>
-          )}
-
-          {/* Toast notifications */}
-          <div className="absolute top-4 right-4 flex flex-col gap-2 z-30 pointer-events-none">
-            {toasts.map((toast) => (
-              <div
-                key={toast.id}
-                className="bg-[var(--accent)]/90 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-lg
-                           animate-[slideIn_0.3s_ease-out] backdrop-blur-sm"
-              >
-                {toast.message}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
