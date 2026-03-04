@@ -178,7 +178,7 @@ export default function ColoringPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [canvasSize] = useState({ width: 800, height: 600 });
   const [color, setColor] = useState('#e53935');
   const [brushSize, setBrushSize] = useState(4);
   const [tool, setTool] = useState<Tool>('brush');
