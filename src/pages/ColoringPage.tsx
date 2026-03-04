@@ -143,6 +143,7 @@ export default function ColoringPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [roomId, setRoomId] = useState(roomParam || '');
   const [connected, setConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
   const [userName, setUserName] = useState('');
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; color: string; name: string }>>({});
   const socketRef = useRef<PartySocket | null>(null);
@@ -214,16 +215,47 @@ export default function ColoringPage() {
       socketRef.current.close();
     }
 
-    const partyHost = import.meta.env.VITE_PARTYKIT_HOST || 'localhost:1999';
+    setConnectionError('');
+
+    const partyHost = import.meta.env.VITE_PARTYKIT_HOST;
+    if (!partyHost) {
+      setConnectionError('Set VITE_PARTYKIT_HOST in .env to enable multiplayer');
+      return;
+    }
+
+    let failCount = 0;
 
     const ws = new PartySocket({
       host: partyHost,
       room: id,
       id: myId.current,
+      maxRetries: 3,
     });
 
-    ws.addEventListener('open', () => setConnected(true));
-    ws.addEventListener('close', () => setConnected(false));
+    ws.addEventListener('open', () => {
+      failCount = 0;
+      setConnected(true);
+      setConnectionError('');
+    });
+
+    ws.addEventListener('close', () => {
+      setConnected(false);
+      failCount++;
+      if (failCount > 3) {
+        setConnectionError('Could not connect to server');
+        ws.close();
+        socketRef.current = null;
+      }
+    });
+
+    ws.addEventListener('error', () => {
+      failCount++;
+      if (failCount > 3) {
+        setConnectionError('Could not connect to server');
+        ws.close();
+        socketRef.current = null;
+      }
+    });
 
     ws.addEventListener('message', (e) => {
       try {
@@ -533,6 +565,9 @@ export default function ColoringPage() {
                 >
                   Create Room
                 </button>
+                {connectionError && (
+                  <p className="text-[10px] text-red-400">{connectionError}</p>
+                )}
                 <div className="flex gap-1">
                   <input
                     type="text"
