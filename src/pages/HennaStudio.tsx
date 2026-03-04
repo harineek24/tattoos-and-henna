@@ -11,7 +11,6 @@ import type { PlacedDesign } from '../types';
 
 export default function HennaStudio() {
   const [placedDesigns, setPlacedDesigns] = useState<PlacedDesign[]>([]);
-  const [galleryRefresh, setGalleryRefresh] = useState(0);
   const [communityRefresh, setCommunityRefresh] = useState(0);
   const handCanvasRef = useRef<HandCanvasHandle>(null);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
@@ -41,10 +40,6 @@ export default function HennaStudio() {
 
   const handleDeleteDesign = useCallback((id: string) => {
     setPlacedDesigns((prev) => prev.filter((d) => d.id !== id));
-  }, []);
-
-  const handleDesignSaved = useCallback(() => {
-    setGalleryRefresh((n) => n + 1);
   }, []);
 
   const handleSaveToCommunity = useCallback(async () => {
@@ -226,7 +221,7 @@ export default function HennaStudio() {
           {/* Tab content */}
           <div className="flex-1 min-h-0 border-b border-[var(--border)] overflow-hidden">
             {activeTab === 'gallery' ? (
-              <DesignGallery refreshTrigger={galleryRefresh} />
+              <DesignGallery refreshTrigger={0} />
             ) : (
               <CommunityGallery refreshTrigger={communityRefresh} />
             )}
@@ -234,7 +229,7 @@ export default function HennaStudio() {
 
           {/* Bottom: Drawing */}
           <div className="flex-1 min-h-0 overflow-hidden">
-            <DrawingCanvas onDesignSaved={handleDesignSaved} />
+            <DrawingCanvas />
           </div>
         </div>
       </div>

@@ -350,7 +350,10 @@ export default function ColoringPage() {
     if (!ctx) return;
 
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // Only set crossOrigin for non-data URLs
+    if (!src.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
     img.onload = () => {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -363,6 +366,21 @@ export default function ColoringPage() {
 
       // Broadcast to room
       broadcast({ type: 'image', dataUrl: canvas.toDataURL() });
+    };
+    img.onerror = () => {
+      // Retry without crossOrigin if it fails
+      const retry = new Image();
+      retry.onload = () => {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const scale = Math.min(canvas.width / retry.width, canvas.height / retry.height) * 0.9;
+        const w = retry.width * scale;
+        const h = retry.height * scale;
+        const x = (canvas.width - w) / 2;
+        const y = (canvas.height - h) / 2;
+        ctx.drawImage(retry, x, y, w, h);
+      };
+      retry.src = src;
     };
     img.src = src;
   };
@@ -377,6 +395,8 @@ export default function ColoringPage() {
       }
     };
     reader.readAsDataURL(file);
+    // Reset so the same file can be re-selected
+    e.target.value = '';
   };
 
   const handleCreateRoom = () => {
