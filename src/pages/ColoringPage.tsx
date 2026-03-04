@@ -338,9 +338,14 @@ export default function ColoringPage() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
 
     switch (event.type) {
       case 'stroke': {
+        // Denormalize from 0-1 range to local canvas pixels
+        const localPoints = event.points.map(([nx, ny]) => [nx * w, ny * h] as [number, number]);
+        const localSize = event.size * w;
         const strokeColor = event.tool === 'eraser' ? '#ffffff' : event.color;
         const bt = event.brushType || 'round';
         const alpha = event.tool === 'eraser' ? 1 : (event.opacity ?? 100) / 100;
@@ -348,9 +353,9 @@ export default function ColoringPage() {
         if (bt === 'spray' && event.tool !== 'eraser') {
           ctx.fillStyle = strokeColor;
           ctx.globalAlpha = alpha * 0.3;
-          for (const [px, py] of event.points) {
-            const density = Math.floor(event.size * 2);
-            const radius = event.size * 1.5;
+          for (const [px, py] of localPoints) {
+            const density = Math.floor(localSize * 2);
+            const radius = localSize * 1.5;
             for (let i = 0; i < density; i++) {
               const angle = Math.random() * Math.PI * 2;
               const r = Math.random() * radius;
@@ -361,7 +366,7 @@ export default function ColoringPage() {
         } else {
           ctx.globalAlpha = alpha;
           ctx.strokeStyle = strokeColor;
-          ctx.lineWidth = event.size;
+          ctx.lineWidth = localSize;
           switch (bt) {
             case 'round':
               ctx.lineCap = 'round';
@@ -374,17 +379,17 @@ export default function ColoringPage() {
             case 'calligraphy':
               ctx.lineCap = 'butt';
               ctx.lineJoin = 'bevel';
-              ctx.lineWidth = event.size * 0.4;
+              ctx.lineWidth = localSize * 0.4;
               break;
             default:
               ctx.lineCap = 'round';
               ctx.lineJoin = 'round';
           }
           ctx.beginPath();
-          if (event.points.length > 0) {
-            ctx.moveTo(event.points[0][0], event.points[0][1]);
-            for (let i = 1; i < event.points.length; i++) {
-              ctx.lineTo(event.points[i][0], event.points[i][1]);
+          if (localPoints.length > 0) {
+            ctx.moveTo(localPoints[0][0], localPoints[0][1]);
+            for (let i = 1; i < localPoints.length; i++) {
+              ctx.lineTo(localPoints[i][0], localPoints[i][1]);
             }
             ctx.stroke();
           }
@@ -393,7 +398,8 @@ export default function ColoringPage() {
         break;
       }
       case 'fill':
-        floodFill(ctx, event.x, event.y, event.color);
+        // Denormalize fill position
+        floodFill(ctx, event.x * w, event.y * h, event.color);
         break;
       case 'image': {
         const img = new Image();
@@ -409,9 +415,10 @@ export default function ColoringPage() {
         break;
       }
       case 'cursor':
+        // Denormalize cursor position to local canvas pixels
         setRemoteCursors((prev) => ({
           ...prev,
-          [event.id]: { x: event.x, y: event.y, color: event.color, name: event.name },
+          [event.id]: { x: event.x * w, y: event.y * h, color: event.color, name: event.name },
         }));
         break;
       case 'user-joined':
@@ -430,7 +437,25 @@ export default function ColoringPage() {
 
   const broadcast = (event: SyncEvent) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(event));
+      const canvas = canvasRef.current;
+      if (!canvas) { socketRef.current.send(JSON.stringify(event)); return; }
+      const w = canvas.width;
+      const h = canvas.height;
+      let normalized: SyncEvent;
+      switch (event.type) {
+        case 'stroke':
+          normalized = { ...event, points: event.points.map(([x, y]) => [x / w, y / h] as [number, number]), size: event.size / w };
+          break;
+        case 'fill':
+          normalized = { ...event, x: event.x / w, y: event.y / h };
+          break;
+        case 'cursor':
+          normalized = { ...event, x: event.x / w, y: event.y / h };
+          break;
+        default:
+          normalized = event;
+      }
+      socketRef.current.send(JSON.stringify(normalized));
     }
   };
 
