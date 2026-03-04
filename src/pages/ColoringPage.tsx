@@ -217,9 +217,9 @@ export default function ColoringPage() {
 
     setConnectionError('');
 
-    const partyHost = import.meta.env.VITE_PARTYKIT_HOST;
+    const partyHost = import.meta.env.VITE_PARTYKIT_HOST || 'color-henna.harineek24.partykit.dev';
     if (!partyHost) {
-      setConnectionError('Set VITE_PARTYKIT_HOST in .env to enable multiplayer');
+      setConnectionError('Could not connect to multiplayer server');
       return;
     }
 
