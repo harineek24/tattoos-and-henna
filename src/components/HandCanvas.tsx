@@ -107,7 +107,7 @@ const HandCanvas = forwardRef<HandCanvasHandle, HandCanvasProps>(function HandCa
   const stageRef = useRef<Konva.Stage>(null);
   const [dimensions, setDimensions] = useState({ width: 600, height: 800 });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const handImage = useImage('/hand.svg');
+  const handImage = useImage('/toppng.com-hand-female-hand-282x440.png');
 
   useImperativeHandle(ref, () => ({
     getStage: () => stageRef.current,

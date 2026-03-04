@@ -28,10 +28,7 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
-        <h2 className="text-sm font-semibold tracking-wide uppercase text-[var(--accent)]">
-          Design Gallery
-        </h2>
+      <div className="flex items-center justify-end px-3 py-1.5 border-b border-[var(--border)]">
         <span className="text-xs text-[var(--text-muted)]">{designs.length} designs</span>
       </div>
 
@@ -51,7 +48,7 @@ export default function DesignGallery({ refreshTrigger }: DesignGalleryProps) {
                 key={design.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, design)}
-                className="aspect-square rounded-lg bg-[var(--bg-dark)] border border-[var(--border)]
+                className="aspect-square rounded-lg bg-[#f5f0eb] border border-[var(--border)]
                            hover:border-[var(--accent)] cursor-grab active:cursor-grabbing
                            transition-colors flex items-center justify-center p-2 group relative"
                 title={design.name}

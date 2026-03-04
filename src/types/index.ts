@@ -15,3 +15,10 @@ export interface PlacedDesign {
   scaleY: number;
   rotation: number;
 }
+
+export interface SharedCreation {
+  id: string;
+  author: string;
+  image_url: string;
+  created_at: string;
+}

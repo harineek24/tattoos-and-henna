@@ -1,8 +1,9 @@
 import { sql, isNeonConfigured } from './neon';
-import type { Design } from '../types';
+import type { Design, SharedCreation } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 const LOCAL_STORAGE_KEY = 'tattoo-designs';
+const COMMUNITY_STORAGE_KEY = 'tattoo-community';
 
 const getLocalDesigns = (): Design[] => {
   try {
@@ -74,4 +75,59 @@ export async function saveDesign(name: string, dataUrl: string): Promise<Design 
   locals.unshift(design);
   saveLocalDesigns(locals);
   return design;
+}
+
+// ─── Community / Shared Creations ───────────────────────────────────
+
+const getLocalCommunity = (): SharedCreation[] => {
+  try {
+    const raw = localStorage.getItem(COMMUNITY_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveLocalCommunity = (items: SharedCreation[]) => {
+  localStorage.setItem(COMMUNITY_STORAGE_KEY, JSON.stringify(items));
+};
+
+export async function fetchCommunityCreations(): Promise<SharedCreation[]> {
+  if (isNeonConfigured() && sql) {
+    try {
+      const rows = await sql`SELECT id, author, image_url, created_at FROM shared_creations ORDER BY created_at DESC`;
+      return rows.map((r) => ({
+        id: r.id as string,
+        author: r.author as string,
+        image_url: r.image_url as string,
+        created_at: r.created_at as string,
+      }));
+    } catch (err) {
+      console.error('Neon community fetch error:', err);
+      return getLocalCommunity();
+    }
+  }
+  return getLocalCommunity();
+}
+
+export async function saveSharedCreation(author: string, dataUrl: string): Promise<SharedCreation | null> {
+  const id = uuidv4();
+  const now = new Date().toISOString();
+
+  if (isNeonConfigured() && sql) {
+    try {
+      await sql`INSERT INTO shared_creations (id, author, image_url, created_at) VALUES (${id}, ${author}, ${dataUrl}, ${now})`;
+      return { id, author, image_url: dataUrl, created_at: now };
+    } catch (err) {
+      console.error('Neon community insert error:', err);
+      return null;
+    }
+  }
+
+  // Local fallback
+  const creation: SharedCreation = { id, author, image_url: dataUrl, created_at: now };
+  const locals = getLocalCommunity();
+  locals.unshift(creation);
+  saveLocalCommunity(locals);
+  return creation;
 }
