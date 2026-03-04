@@ -184,29 +184,28 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
           </div>
         </div>
 
-        {/* Color swatches */}
-        <div className="shrink-0 px-3 py-2 border-b border-[var(--border)]">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div
-              className="w-5 h-5 rounded-md shadow-inner"
-              style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
-            />
-            <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{brushColor}</span>
-          </div>
-          <div className="grid grid-cols-8 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
-            {COLORS.map((c, i) => (
-              <button
-                key={`${c}-${i}`}
-                onClick={() => { setBrushColor(c); setTool('draw'); }}
-                className={`aspect-square transition-all relative ${
-                  brushColor === c && tool === 'draw'
-                    ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
-                    : 'hover:scale-105 hover:z-10'
-                }`}
-                style={{ backgroundColor: c }}
-                title={c}
-              />
-            ))}
+        {/* Color swatches — compact strip */}
+        <div className="shrink-0 px-3 py-1.5 border-b border-[var(--border)] flex items-center gap-2">
+          <div
+            className="w-5 h-5 rounded-md shadow-inner shrink-0"
+            style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
+          />
+          <div className="flex-1 overflow-x-auto">
+            <div className="flex gap-px" style={{ width: 'max-content' }}>
+              {COLORS.map((c, i) => (
+                <button
+                  key={`${c}-${i}`}
+                  onClick={() => { setBrushColor(c); setTool('draw'); }}
+                  className={`w-4 h-4 shrink-0 rounded-sm transition-all ${
+                    brushColor === c && tool === 'draw'
+                      ? 'ring-2 ring-[var(--accent)] z-10 scale-125'
+                      : 'hover:scale-110 hover:z-10'
+                  }`}
+                  style={{ backgroundColor: c }}
+                  title={c}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
