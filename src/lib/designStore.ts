@@ -92,8 +92,32 @@ const saveLocalCommunity = (items: SharedCreation[]) => {
   localStorage.setItem(COMMUNITY_STORAGE_KEY, JSON.stringify(items));
 };
 
+async function ensureCommunityTable(): Promise<void> {
+  if (!sql) return;
+  try {
+    await sql`CREATE TABLE IF NOT EXISTS shared_creations (
+      id TEXT PRIMARY KEY,
+      author TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )`;
+  } catch (err) {
+    console.error('Failed to create shared_creations table:', err);
+  }
+}
+
+let communityTableReady: Promise<void> | null = null;
+
+function getCommunityTableReady(): Promise<void> {
+  if (!communityTableReady && isNeonConfigured()) {
+    communityTableReady = ensureCommunityTable();
+  }
+  return communityTableReady ?? Promise.resolve();
+}
+
 export async function fetchCommunityCreations(): Promise<SharedCreation[]> {
   if (isNeonConfigured() && sql) {
+    await getCommunityTableReady();
     try {
       const rows = await sql`SELECT id, author, image_url, created_at FROM shared_creations ORDER BY created_at DESC`;
       return rows.map((r) => ({
@@ -115,6 +139,7 @@ export async function saveSharedCreation(author: string, dataUrl: string): Promi
   const now = new Date().toISOString();
 
   if (isNeonConfigured() && sql) {
+    await getCommunityTableReady();
     try {
       await sql`INSERT INTO shared_creations (id, author, image_url, created_at) VALUES (${id}, ${author}, ${dataUrl}, ${now})`;
       return { id, author, image_url: dataUrl, created_at: now };

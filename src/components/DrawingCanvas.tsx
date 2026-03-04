@@ -198,8 +198,8 @@ export default function DrawingCanvas({ onDesignSaved }: DrawingCanvasProps) {
         {/* Clear */}
         <button
           onClick={clearCanvas}
-          className="ml-auto text-xs px-2 py-1 rounded bg-[var(--bg-dark)] border border-[var(--border)]
-                     hover:border-red-500 hover:text-red-400 transition-colors"
+          className="ml-auto text-xs px-2 py-1 text-[var(--text-muted)] font-bold
+                     hover:text-red-400 transition-colors"
         >
           Clear
         </button>
@@ -248,8 +248,8 @@ export default function DrawingCanvas({ onDesignSaved }: DrawingCanvasProps) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="text-sm px-3 py-1.5 rounded bg-[var(--accent)] text-black font-medium
-                     hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50"
+          className="text-sm px-3 py-1.5 text-[var(--accent)] font-bold
+                     hover:text-[var(--accent-hover)] transition-colors disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save & Add'}
         </button>

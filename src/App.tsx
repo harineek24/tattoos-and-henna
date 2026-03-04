@@ -74,7 +74,7 @@ export default function App() {
     if (!dataUrl) return;
 
     const link = document.createElement('a');
-    link.download = 'my-tattoo-design.png';
+    link.download = 'my-henna-design.png';
     link.href = dataUrl;
     document.body.appendChild(link);
     link.click();
@@ -89,14 +89,14 @@ export default function App() {
     // Convert data URL to blob for sharing
     const res = await fetch(dataUrl);
     const blob = await res.blob();
-    const file = new File([blob], 'my-tattoo-design.png', { type: 'image/png' });
+    const file = new File([blob], 'my-henna-design.png', { type: 'image/png' });
 
     // Try native Web Share API first (works on mobile & some desktops)
     if (navigator.share && navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({
-          title: 'My Tattoo Design — Ink & Henna',
-          text: 'Check out this tattoo design I made!',
+          title: 'My Design — Color & Henna',
+          text: 'Check out this henna design I made!',
           files: [file],
         });
         return;
@@ -128,11 +128,11 @@ export default function App() {
       <header className="flex items-center justify-between px-6 py-3 border-b border-[var(--border)] shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-[var(--accent)]">Ink</span>
+            <span className="text-[var(--accent)]">Color</span>
             <span className="text-[var(--text-muted)]"> & </span>
             <span className="text-[var(--accent)]">Henna</span>
           </h1>
-          <span className="text-xs text-[var(--text-muted)] hidden sm:block">Virtual Tattoo Studio</span>
+          <span className="text-xs text-[var(--text-muted)] hidden sm:block">Virtual Design Studio</span>
         </div>
         <div className="flex items-center gap-3 text-xs">
           <span className="text-[var(--text-muted)]">
@@ -143,15 +143,13 @@ export default function App() {
             <>
               <button
                 onClick={handleDownload}
-                className="px-2.5 py-1.5 rounded bg-[var(--accent)] text-black font-medium
-                           hover:bg-[var(--accent-hover)] transition-colors"
+                className="px-2 py-1 text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
               >
-                Download PNG
+                Download
               </button>
               <button
                 onClick={handleShare}
-                className="px-2.5 py-1.5 rounded border border-[var(--accent)] text-[var(--accent)]
-                           hover:bg-[var(--accent)]/10 transition-colors"
+                className="px-2 py-1 text-[var(--accent)] font-bold hover:text-[var(--accent-hover)] transition-colors"
               >
                 Share
               </button>
@@ -161,14 +159,14 @@ export default function App() {
                   placeholder="Your name"
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
-                  className="w-24 text-xs bg-[var(--bg-dark)] border border-[var(--border)] rounded px-2 py-1.5
+                  className="w-24 text-xs bg-transparent border-b border-[var(--border)] px-1 py-1
                              text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
                 />
                 <button
                   onClick={handleSaveToCommunity}
                   disabled={savingToCommunity}
-                  className="px-2.5 py-1.5 rounded bg-emerald-600 text-white font-medium text-xs
-                             hover:bg-emerald-500 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  className="px-2 py-1 text-emerald-400 font-bold hover:text-emerald-300 transition-colors
+                             disabled:opacity-50 whitespace-nowrap"
                 >
                   {savingToCommunity ? 'Saving...' : 'Save to Community'}
                 </button>
@@ -181,9 +179,9 @@ export default function App() {
               </div>
               <button
                 onClick={() => setPlacedDesigns([])}
-                className="text-red-400 hover:text-red-300 transition-colors"
+                className="px-2 py-1 text-red-400 font-bold hover:text-red-300 transition-colors"
               >
-                Clear all
+                Clear
               </button>
             </>
           )}
