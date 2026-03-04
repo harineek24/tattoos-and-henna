@@ -70,7 +70,18 @@ interface CursorEvent {
   name: string;
 }
 
-type SyncEvent = StrokeEvent | FillEvent | ImageEvent | CursorEvent;
+interface UserJoinedEvent {
+  type: 'user-joined';
+  name: string;
+  id: string;
+}
+
+interface UserLeftEvent {
+  type: 'user-left';
+  id: string;
+}
+
+type SyncEvent = StrokeEvent | FillEvent | ImageEvent | CursorEvent | UserJoinedEvent | UserLeftEvent;
 
 // ─── Flood fill (scanline) ───────────────────────────────────────
 function floodFill(ctx: CanvasRenderingContext2D, startX: number, startY: number, fillColor: string) {
@@ -146,10 +157,19 @@ export default function ColoringPage() {
   const [connectionError, setConnectionError] = useState('');
   const [userName, setUserName] = useState('');
   const [remoteCursors, setRemoteCursors] = useState<Record<string, { x: number; y: number; color: string; name: string }>>({});
+  const [toasts, setToasts] = useState<{ id: string; message: string }[]>([]);
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
   const undoStack = useRef<ImageData[]>([]);
+
+  const showToast = useCallback((message: string) => {
+    const id = uuidv4();
+    setToasts((prev) => [...prev, { id, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  }, []);
 
   const saveSnapshot = () => {
     const canvas = canvasRef.current;
@@ -230,6 +250,7 @@ export default function ColoringPage() {
       room: id,
       id: myId.current,
       maxRetries: 3,
+      query: { name: userName || 'Guest' },
     });
 
     ws.addEventListener('open', () => {
@@ -318,6 +339,17 @@ export default function ColoringPage() {
           ...prev,
           [event.id]: { x: event.x, y: event.y, color: event.color, name: event.name },
         }));
+        break;
+      case 'user-joined':
+        showToast(`${event.name} joined the room`);
+        break;
+      case 'user-left':
+        setRemoteCursors((prev) => {
+          const next = { ...prev };
+          delete next[event.id];
+          return next;
+        });
+        showToast('A user left the room');
         break;
     }
   };
@@ -738,6 +770,19 @@ export default function ColoringPage() {
               </div>
             </div>
           )}
+
+          {/* Toast notifications */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-30 pointer-events-none">
+            {toasts.map((toast) => (
+              <div
+                key={toast.id}
+                className="bg-[var(--accent)]/90 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-lg
+                           animate-[slideIn_0.3s_ease-out] backdrop-blur-sm"
+              >
+                {toast.message}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

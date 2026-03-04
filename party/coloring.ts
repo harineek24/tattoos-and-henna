@@ -17,7 +17,7 @@ export default class ColoringServer {
     this.party = party;
   }
 
-  onConnect(conn: Connection, _ctx: ConnectionContext) {
+  onConnect(conn: Connection, ctx: ConnectionContext) {
     // Send current canvas state to new connection if stored
     const stored = this.party.storage.get<string>("canvas");
     if (stored) {
@@ -26,6 +26,28 @@ export default class ColoringServer {
           conn.send(JSON.stringify({ type: "image", dataUrl: data }));
         }
       });
+    }
+
+    // Read user name from query string
+    const url = new URL(ctx.request.url);
+    const name = url.searchParams.get("name") || "Guest";
+
+    // Notify others that a new user joined
+    const joinMsg = JSON.stringify({ type: "user-joined", name, id: conn.id });
+    for (const c of this.party.getConnections()) {
+      if (c.id !== conn.id) {
+        c.send(joinMsg);
+      }
+    }
+  }
+
+  onClose(conn: Connection) {
+    // Notify others that a user left
+    const leaveMsg = JSON.stringify({ type: "user-left", id: conn.id });
+    for (const c of this.party.getConnections()) {
+      if (c.id !== conn.id) {
+        c.send(leaveMsg);
+      }
     }
   }
 
