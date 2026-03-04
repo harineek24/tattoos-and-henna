@@ -35,7 +35,7 @@ interface DrawingCanvasProps {
 const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
   function DrawingCanvas({ onSave }, ref) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [isDrawing, setIsDrawing] = useState(false);
+    const isDrawingRef = useRef(false);
     const [brushSize, setBrushSize] = useState(3);
     const [brushColor, setBrushColor] = useState('#8b6f47');
     const [tool, setTool] = useState<'draw' | 'erase'>('draw');
@@ -92,13 +92,13 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.globalCompositeOperation = tool === 'erase' ? 'destination-out' : 'source-over';
-      setIsDrawing(true);
+      isDrawingRef.current = true;
       setHasContent(true);
     };
 
     const draw = (e: React.MouseEvent | React.TouchEvent) => {
       if ('touches' in e) e.preventDefault();
-      if (!isDrawing) return;
+      if (!isDrawingRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -110,11 +110,11 @@ const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
     };
 
     const stopDrawing = () => {
-      if (!isDrawing) return;
+      if (!isDrawingRef.current) return;
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext('2d');
       if (ctx) ctx.globalCompositeOperation = 'source-over';
-      setIsDrawing(false);
+      isDrawingRef.current = false;
     };
 
     const clearCanvas = () => {
