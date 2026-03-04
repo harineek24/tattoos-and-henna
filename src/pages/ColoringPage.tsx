@@ -3,12 +3,28 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import PartySocket from 'partysocket';
 
-// ─── Curated color palette ──────────────────────────────────────
+// ─── Eyeshadow-palette color grid (8 cols × 10 rows = 80 colors) ──
 const COLORS = [
-  '#000000', '#434343', '#9e9e9e', '#ffffff',
-  '#e53935', '#ff7043', '#ffb74d', '#fff176',
-  '#66bb6a', '#26a69a', '#42a5f5', '#5c6bc0',
-  '#ab47bc', '#ec407a', '#8d6e63', '#f5d2b5',
+  // Neutrals
+  '#ffffff', '#f0f0f0', '#d9d9d9', '#bfbfbf', '#8c8c8c', '#595959', '#333333', '#000000',
+  // Warm browns / beiges
+  '#fff8e1', '#ffe0b2', '#f5d2b5', '#d4a07a', '#c9a87c', '#a67c52', '#8d5524', '#5d4037',
+  // Reds
+  '#ffcdd2', '#ef9a9a', '#e57373', '#f44336', '#e53935', '#d32f2f', '#c62828', '#b71c1c',
+  // Oranges
+  '#ffecd2', '#ffcc80', '#ffb74d', '#ff9800', '#fb8c00', '#f57c00', '#ef6c00', '#e65100',
+  // Yellows
+  '#fff9c4', '#fff59d', '#fff176', '#ffeb3b', '#fdd835', '#fbc02d', '#f9a825', '#f57f17',
+  // Greens
+  '#c8e6c9', '#a5d6a7', '#81c784', '#4caf50', '#43a047', '#388e3c', '#2e7d32', '#1b5e20',
+  // Teals
+  '#b2dfdb', '#80cbc4', '#4db6ac', '#009688', '#00897b', '#00796b', '#00695c', '#004d40',
+  // Blues
+  '#bbdefb', '#90caf9', '#64b5f6', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1',
+  // Purples
+  '#e1bee7', '#ce93d8', '#ba68c8', '#9c27b0', '#8e24aa', '#7b1fa2', '#6a1b9a', '#4a148c',
+  // Pinks
+  '#f8bbd0', '#f48fb1', '#f06292', '#e91e63', '#d81b60', '#c2185b', '#ad1457', '#880e4f',
 ];
 
 // ─── B&W templates ──────────────────────────────────────────────
@@ -147,6 +163,7 @@ export default function ColoringPage() {
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
   const undoStack = useRef<ImageData[]>([]);
+  const redoStack = useRef<ImageData[]>([]);
 
   const showToast = useCallback((message: string) => {
     const id = uuidv4();
@@ -156,18 +173,42 @@ export default function ColoringPage() {
     }, 3000);
   }, []);
 
-  const saveSnapshot = () => {
+  const getCurrentSnapshot = (): ImageData | null => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return null;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    undoStack.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    if (!ctx) return null;
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  };
+
+  const saveSnapshot = () => {
+    const snapshot = getCurrentSnapshot();
+    if (!snapshot) return;
+    undoStack.current.push(snapshot);
     if (undoStack.current.length > 50) undoStack.current.shift();
+    // New action invalidates redo history
+    redoStack.current = [];
   };
 
   const undo = useCallback(() => {
     const snapshot = undoStack.current.pop();
     if (!snapshot) return;
+    // Save current state to redo stack before undoing
+    const current = getCurrentSnapshot();
+    if (current) redoStack.current.push(current);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.putImageData(snapshot, 0, 0);
+  }, []);
+
+  const redo = useCallback(() => {
+    const snapshot = redoStack.current.pop();
+    if (!snapshot) return;
+    // Save current state to undo stack before redoing
+    const current = getCurrentSnapshot();
+    if (current) undoStack.current.push(current);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -177,14 +218,20 @@ export default function ColoringPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        redo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
         undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo]);
+  }, [undo, redo]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -520,18 +567,20 @@ export default function ColoringPage() {
     }
   };
 
-  const toolBtn = (t: Tool, label: string, icon: React.ReactNode) => (
+  // ─── Sidebar action button ─────────────────────────────────────
+  const actionBtn = (
+    onClick: () => void,
+    icon: React.ReactNode,
+    label: string,
+    extraClass = '',
+  ) => (
     <button
-      key={t}
-      onClick={() => setTool(t)}
-      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-        tool === t
-          ? 'bg-[var(--accent)] text-white shadow-sm'
-          : 'text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)]'
-      }`}
+      onClick={onClick}
+      className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium transition-all
+                  text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] ${extraClass}`}
     >
       {icon}
-      <span className="hidden sm:inline">{label}</span>
+      {label}
     </button>
   );
 
@@ -560,7 +609,7 @@ export default function ColoringPage() {
           }`}
         >
           {connected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-          {connected ? `Room` : 'Join Room'}
+          {connected ? 'Room' : 'Join Room'}
         </button>
       </header>
 
@@ -631,203 +680,246 @@ export default function ColoringPage() {
         </div>
       )}
 
-      {/* ─── Canvas area ──────────────────────────────────────── */}
-      <div
-        ref={containerRef}
-        className="flex-1 min-h-0 relative bg-gray-50"
-        style={{ cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'default' }}
-      >
-        <canvas
-          ref={canvasRef}
-          width={canvasSize.width}
-          height={canvasSize.height}
-          className="touch-none"
-          onMouseDown={handlePointerDown}
-          onMouseMove={handlePointerMove}
-          onMouseUp={handlePointerUp}
-          onMouseLeave={handlePointerUp}
-          onTouchStart={handlePointerDown}
-          onTouchMove={handlePointerMove}
-          onTouchEnd={handlePointerUp}
-        />
+      {/* ─── Main: Canvas + Right Sidebar ─────────────────────── */}
+      <div className="flex-1 flex min-h-0">
 
-        {/* Remote cursors */}
-        {Object.entries(remoteCursors).map(([id, cursor]) => (
-          <div
-            key={id}
-            className="absolute pointer-events-none z-20 flex flex-col items-center"
-            style={{
-              left: cursor.x,
-              top: cursor.y,
-              transform: 'translate(-4px, -4px)',
-            }}
-          >
+        {/* Canvas area */}
+        <div
+          ref={containerRef}
+          className="flex-1 min-w-0 relative bg-gray-50"
+          style={{ cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'default' }}
+        >
+          <canvas
+            ref={canvasRef}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            className="touch-none"
+            onMouseDown={handlePointerDown}
+            onMouseMove={handlePointerMove}
+            onMouseUp={handlePointerUp}
+            onMouseLeave={handlePointerUp}
+            onTouchStart={handlePointerDown}
+            onTouchMove={handlePointerMove}
+            onTouchEnd={handlePointerUp}
+          />
+
+          {/* Remote cursors */}
+          {Object.entries(remoteCursors).map(([id, cursor]) => (
             <div
-              className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
-              style={{ backgroundColor: cursor.color }}
-            />
-            <span className="text-[10px] text-white bg-black/50 px-1.5 rounded-full mt-0.5 whitespace-nowrap">
-              {cursor.name}
-            </span>
-          </div>
-        ))}
-
-        {/* Empty state hint */}
-        {!connected && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 text-sm text-[var(--text-muted)] shadow-sm text-center max-w-xs">
-              Pick a template or start drawing
-            </div>
-          </div>
-        )}
-
-        {/* Toast notifications */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-30 pointer-events-none">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className="bg-[var(--text)] text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg
-                         animate-[slideIn_0.3s_ease-out] whitespace-nowrap"
-            >
-              {toast.message}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Bottom toolbar ───────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[var(--border)] bg-white">
-        {/* Color row */}
-        <div className="flex items-center gap-2 px-4 py-2.5 overflow-x-auto">
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setColor(c)}
-              className={`w-8 h-8 rounded-full shrink-0 transition-all ${
-                color === c
-                  ? 'ring-2 ring-[var(--accent)] ring-offset-2 scale-110'
-                  : 'hover:scale-110'
-              }`}
+              key={id}
+              className="absolute pointer-events-none z-20 flex flex-col items-center"
               style={{
-                backgroundColor: c,
-                border: c === '#ffffff' ? '1.5px solid #ddd' : 'none',
+                left: cursor.x,
+                top: cursor.y,
+                transform: 'translate(-4px, -4px)',
               }}
-            />
+            >
+              <div
+                className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
+                style={{ backgroundColor: cursor.color }}
+              />
+              <span className="text-[10px] text-white bg-black/50 px-1.5 rounded-full mt-0.5 whitespace-nowrap">
+                {cursor.name}
+              </span>
+            </div>
           ))}
+
+          {/* Empty state */}
+          {!connected && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 text-sm text-[var(--text-muted)] shadow-sm text-center max-w-xs">
+                Pick a template or start drawing
+              </div>
+            </div>
+          )}
+
+          {/* Toast notifications */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 z-30 pointer-events-none">
+            {toasts.map((toast) => (
+              <div
+                key={toast.id}
+                className="bg-[var(--text)] text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg
+                           animate-[slideIn_0.3s_ease-out] whitespace-nowrap"
+              >
+                {toast.message}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Tools + actions row */}
-        <div className="flex items-center justify-between px-3 py-2 border-t border-gray-100">
-          {/* Left: tools */}
-          <div className="flex items-center gap-1">
-            {toolBtn('brush', 'Brush',
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-              </svg>
-            )}
-            {toolBtn('fill', 'Fill',
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-              </svg>
-            )}
-            {toolBtn('eraser', 'Eraser',
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.9-9.9c1-1 2.5-1 3.4 0l3.3 3.3c1 1 1 2.5 0 3.4L9.4 21" />
-                <path d="M22 21H7" />
-              </svg>
-            )}
+        {/* ─── Right sidebar (two columns) ────────────────────── */}
+        <div className="w-[340px] shrink-0 border-l border-[var(--border)] bg-white flex overflow-hidden">
 
-            {/* Brush size */}
-            {tool !== 'fill' && (
-              <div className="flex items-center gap-1.5 ml-2">
-                <input
-                  type="range"
-                  min="1"
-                  max="30"
-                  value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="w-16 sm:w-24 accent-[var(--accent)]"
+          {/* Column 1: Color swatches (eyeshadow palette) */}
+          <div className="w-[180px] border-r border-[var(--border)] flex flex-col overflow-hidden">
+            <div className="px-3 py-2 border-b border-[var(--border)]">
+              <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Palette</h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {/* Selected color preview */}
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div
+                  className="w-6 h-6 rounded-md shadow-inner"
+                  style={{ backgroundColor: color, border: color === '#ffffff' ? '1px solid #ddd' : 'none' }}
                 />
-                <span className="text-[10px] text-[var(--text-muted)] w-6">{brushSize}px</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{color}</span>
               </div>
-            )}
+              {/* Swatch grid */}
+              <div className="grid grid-cols-8 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
+                {COLORS.map((c, i) => (
+                  <button
+                    key={`${c}-${i}`}
+                    onClick={() => setColor(c)}
+                    className={`aspect-square transition-all relative ${
+                      color === c
+                        ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
+                        : 'hover:scale-105 hover:z-10'
+                    }`}
+                    style={{
+                      backgroundColor: c,
+                    }}
+                    title={c}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Right: actions */}
-          <div className="flex items-center gap-0.5">
-            {/* Templates */}
-            <button
-              onClick={() => setShowTemplates(true)}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
-              title="Templates"
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-              </svg>
-            </button>
+          {/* Column 2: Tools & options */}
+          <div className="flex-1 flex flex-col overflow-y-auto">
+            {/* Tools section */}
+            <div className="p-3 border-b border-[var(--border)]">
+              <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Tools</h3>
+              <div className="flex flex-col gap-0.5">
+                {([
+                  ['brush', 'Brush',
+                    <svg key="b" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    </svg>,
+                  ],
+                  ['fill', 'Fill',
+                    <svg key="f" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+                    </svg>,
+                  ],
+                  ['eraser', 'Eraser',
+                    <svg key="e" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.9-9.9c1-1 2.5-1 3.4 0l3.3 3.3c1 1 1 2.5 0 3.4L9.4 21" />
+                      <path d="M22 21H7" />
+                    </svg>,
+                  ],
+                ] as [Tool, string, React.ReactNode][]).map(([t, label, icon]) => (
+                  <button
+                    key={t}
+                    onClick={() => setTool(t)}
+                    className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                      tool === t
+                        ? 'bg-[var(--accent)] text-white shadow-sm'
+                        : 'text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)]'
+                    }`}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
 
-            {/* Upload */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
-              title="Upload image"
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <path d="m21 15-5-5L5 21" />
-              </svg>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleUpload}
-              className="hidden"
-            />
+              {/* Brush size */}
+              {tool !== 'fill' && (
+                <div className="flex items-center gap-2 mt-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    value={brushSize}
+                    onChange={(e) => setBrushSize(Number(e.target.value))}
+                    className="flex-1 accent-[var(--accent)]"
+                  />
+                  <span className="text-[10px] text-[var(--text-muted)] w-7">{brushSize}px</span>
+                </div>
+              )}
+            </div>
 
-            {/* Undo */}
-            <button
-              onClick={undo}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
-              title="Undo"
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7v6h6" />
-                <path d="M3 13a9 9 0 1 0 2-7.7L3 7" />
-              </svg>
-            </button>
+            {/* Undo / Redo */}
+            <div className="p-3 border-b border-[var(--border)]">
+              <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">History</h3>
+              <div className="flex gap-1">
+                <button
+                  onClick={undo}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium
+                             text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-all border border-[var(--border)]"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 7v6h6" />
+                    <path d="M3 13a9 9 0 1 0 2-7.7L3 7" />
+                  </svg>
+                  Undo
+                </button>
+                <button
+                  onClick={redo}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium
+                             text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-all border border-[var(--border)]"
+                  title="Redo (Ctrl+Shift+Z)"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 7v6h-6" />
+                    <path d="M21 13a9 9 0 1 0-2-7.7L21 7" />
+                  </svg>
+                  Redo
+                </button>
+              </div>
+            </div>
 
-            <div className="w-px h-5 bg-[var(--border)] mx-1" />
+            {/* Actions */}
+            <div className="p-3 flex flex-col gap-0.5">
+              <h3 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Options</h3>
 
-            {/* Download */}
-            <button
-              onClick={handleDownload}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)] transition-colors"
-              title="Download"
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <path d="M7 10l5 5 5-5" />
-                <path d="M12 15V3" />
-              </svg>
-            </button>
+              {actionBtn(() => setShowTemplates(true),
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                </svg>,
+                'Templates',
+              )}
 
-            {/* Clear */}
-            <button
-              onClick={clearCanvas}
-              className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-red-50 hover:text-red-500 transition-colors"
-              title="Clear canvas"
-            >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18" />
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              </svg>
-            </button>
+              {actionBtn(() => fileInputRef.current?.click(),
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="m21 15-5-5L5 21" />
+                </svg>,
+                'Upload Image',
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleUpload}
+                className="hidden"
+              />
+
+              {actionBtn(handleDownload,
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="M7 10l5 5 5-5" />
+                  <path d="M12 15V3" />
+                </svg>,
+                'Download',
+              )}
+
+              {actionBtn(clearCanvas,
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                </svg>,
+                'Clear',
+                'hover:!bg-red-50 hover:!text-red-500',
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -853,7 +945,7 @@ export default function ColoringPage() {
                 </svg>
               </button>
             </div>
-            <div className="grid grid-cols-4 sm:grid-cols-4 gap-3 px-5 pb-6 max-h-[40vh] overflow-y-auto">
+            <div className="grid grid-cols-4 gap-3 px-5 pb-6 max-h-[40vh] overflow-y-auto">
               {TEMPLATES.map((t) => (
                 <button
                   key={t.id}
