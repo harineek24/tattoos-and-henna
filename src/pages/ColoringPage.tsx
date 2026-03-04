@@ -658,7 +658,7 @@ export default function ColoringPage() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
-  const shareLink = roomId ? `${window.location.origin}/color?room=${roomId}` : '';
+  const shareLink = roomId ? `${window.location.origin}/?room=${roomId}` : '';
 
   const copyShareLink = async () => {
     if (!shareLink) return;
