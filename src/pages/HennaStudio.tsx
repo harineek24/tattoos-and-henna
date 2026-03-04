@@ -6,7 +6,7 @@ import type { HandCanvasHandle } from '../components/HandCanvas';
 import DesignGallery from '../components/DesignGallery';
 import CommunityGallery from '../components/CommunityGallery';
 import DrawingCanvas from '../components/DrawingCanvas';
-import { saveSharedCreation } from '../lib/designStore';
+import { saveSharedCreation, saveDesign } from '../lib/designStore';
 import type { PlacedDesign } from '../types';
 
 export default function HennaStudio() {
@@ -19,6 +19,7 @@ export default function HennaStudio() {
   const [savingToCommunity, setSavingToCommunity] = useState(false);
   const [authorName, setAuthorName] = useState('');
   const [showActions, setShowActions] = useState(false);
+  const [designRefresh, setDesignRefresh] = useState(0);
 
   const pushHistory = useCallback(() => {
     setPlacedDesigns((current) => {
@@ -139,6 +140,16 @@ export default function HennaStudio() {
 
     setTimeout(() => setShareStatus(null), 2500);
   };
+
+  const handleSaveDrawing = useCallback(async (name: string, dataUrl: string) => {
+    const result = await saveDesign(name, dataUrl);
+    if (result) {
+      setDesignRefresh((n) => n + 1);
+      setActiveTab('gallery');
+      setShareStatus('Design saved!');
+      setTimeout(() => setShareStatus(null), 2500);
+    }
+  }, []);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[var(--bg-dark)]">
@@ -331,15 +342,15 @@ export default function HennaStudio() {
           {/* Tab content */}
           <div className="flex-1 min-h-0 border-b border-[var(--border)] overflow-hidden">
             {activeTab === 'gallery' ? (
-              <DesignGallery refreshTrigger={0} />
+              <DesignGallery refreshTrigger={designRefresh} />
             ) : (
               <CommunityGallery refreshTrigger={communityRefresh} />
             )}
           </div>
 
           {/* Drawing */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <DrawingCanvas />
+          <div className="flex-[2] min-h-[280px] overflow-hidden">
+            <DrawingCanvas onSave={handleSaveDrawing} />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 // ─── Henna & tattoo palette: whites, blacks, browns, reds (8 cols × 8 rows) ──
 const COLORS = [
@@ -20,168 +20,238 @@ const COLORS = [
   '#333333', '#2b2b2b', '#242424', '#1c1c1c', '#141414', '#0d0d0d', '#060606', '#000000',
 ];
 
-export default function DrawingCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [brushSize, setBrushSize] = useState(3);
-  const [brushColor, setBrushColor] = useState('#8b6f47');
-  const [canvasSize, setCanvasSize] = useState({ width: 300, height: 200 });
+// Fixed canvas resolution so drawings don't get wiped on resize
+const CANVAS_W = 400;
+const CANVAS_H = 300;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        const w = Math.floor(entry.contentRect.width);
-        const h = Math.floor(entry.contentRect.height);
-        setCanvasSize({ width: w, height: h });
-      }
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }, [canvasSize]);
-
-  const getPos = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    if ('touches' in e) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top,
-      };
-    }
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-  };
-
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    ctx.strokeStyle = brushColor;
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    setIsDrawing(true);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
-
-  return (
-    <div className="h-full flex flex-col bg-white">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
-        <h2 className="text-xs font-semibold text-[var(--accent)]">
-          Draw Your Own
-        </h2>
-        <div className="flex items-center gap-2">
-          <input
-            type="range"
-            min="1"
-            max="12"
-            value={brushSize}
-            onChange={(e) => setBrushSize(Number(e.target.value))}
-            className="w-16 accent-[var(--accent)]"
-          />
-          <span className="text-[10px] text-[var(--text-muted)] w-5">{brushSize}px</span>
-          <button
-            onClick={clearCanvas}
-            className="text-xs px-2 py-1 text-[var(--text-muted)] font-medium
-                       hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-
-      {/* Color swatches */}
-      <div className="shrink-0 overflow-y-auto px-3 py-2">
-        {/* Selected color preview */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <div
-            className="w-5 h-5 rounded-md shadow-inner"
-            style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
-          />
-          <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{brushColor}</span>
-        </div>
-        {/* Swatch grid */}
-        <div className="grid grid-cols-8 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
-          {COLORS.map((c, i) => (
-            <button
-              key={`${c}-${i}`}
-              onClick={() => setBrushColor(c)}
-              className={`aspect-square transition-all relative ${
-                brushColor === c
-                  ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
-                  : 'hover:scale-105 hover:z-10'
-              }`}
-              style={{ backgroundColor: c }}
-              title={c}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Drawing canvas */}
-      <div
-        ref={containerRef}
-        className="flex-1 min-h-0 relative bg-gray-50"
-      >
-        <canvas
-          ref={canvasRef}
-          width={canvasSize.width}
-          height={canvasSize.height}
-          className="touch-none absolute inset-0"
-          style={{ cursor: 'crosshair' }}
-          onMouseDown={startDrawing}
-          onMouseMove={draw}
-          onMouseUp={stopDrawing}
-          onMouseLeave={stopDrawing}
-          onTouchStart={startDrawing}
-          onTouchMove={draw}
-          onTouchEnd={stopDrawing}
-        />
-      </div>
-    </div>
-  );
+export interface DrawingCanvasHandle {
+  getDataUrl: () => string | null;
 }
+
+interface DrawingCanvasProps {
+  onSave?: (name: string, dataUrl: string) => void;
+}
+
+const DrawingCanvas = forwardRef<DrawingCanvasHandle, DrawingCanvasProps>(
+  function DrawingCanvas({ onSave }, ref) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [brushSize, setBrushSize] = useState(3);
+    const [brushColor, setBrushColor] = useState('#8b6f47');
+    const [tool, setTool] = useState<'draw' | 'erase'>('draw');
+    const [hasContent, setHasContent] = useState(false);
+
+    // Initialize canvas with transparent background
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    }, []);
+
+    useImperativeHandle(ref, () => ({
+      getDataUrl: () => {
+        const canvas = canvasRef.current;
+        return canvas ? canvas.toDataURL() : null;
+      },
+    }));
+
+    const getPos = (e: React.MouseEvent | React.TouchEvent): { x: number; y: number } => {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      if ('touches' in e) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        if (!touch) return { x: 0, y: 0 };
+        return {
+          x: (touch.clientX - rect.left) * scaleX,
+          y: (touch.clientY - rect.top) * scaleY,
+        };
+      }
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    };
+
+    const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+      if ('touches' in e) e.preventDefault();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = tool === 'erase' ? 'rgba(0,0,0,1)' : brushColor;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.globalCompositeOperation = tool === 'erase' ? 'destination-out' : 'source-over';
+      setIsDrawing(true);
+      setHasContent(true);
+    };
+
+    const draw = (e: React.MouseEvent | React.TouchEvent) => {
+      if ('touches' in e) e.preventDefault();
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    };
+
+    const stopDrawing = () => {
+      if (!isDrawing) return;
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (ctx) ctx.globalCompositeOperation = 'source-over';
+      setIsDrawing(false);
+    };
+
+    const clearCanvas = () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+      setHasContent(false);
+    };
+
+    const handleSave = () => {
+      if (!onSave || !hasContent) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const dataUrl = canvas.toDataURL();
+      const name = `Drawing ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      onSave(name, dataUrl);
+    };
+
+    return (
+      <div className="h-full flex flex-col bg-white">
+        {/* Header */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
+          <h2 className="text-xs font-semibold text-[var(--accent)]">
+            Draw Your Own
+          </h2>
+          <div className="flex items-center gap-1.5">
+            {/* Draw / Erase toggle */}
+            <button
+              onClick={() => setTool('draw')}
+              className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${
+                tool === 'draw'
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-muted)] hover:bg-gray-100'
+              }`}
+            >
+              Draw
+            </button>
+            <button
+              onClick={() => setTool('erase')}
+              className={`text-[10px] px-2 py-1 rounded-md font-medium transition-colors ${
+                tool === 'erase'
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-muted)] hover:bg-gray-100'
+              }`}
+            >
+              Erase
+            </button>
+            <div className="w-px h-4 bg-[var(--border)] mx-0.5" />
+            <input
+              type="range"
+              min="1"
+              max="16"
+              value={brushSize}
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+              className="w-14 accent-[var(--accent)]"
+            />
+            <span className="text-[10px] text-[var(--text-muted)] w-5">{brushSize}px</span>
+            <button
+              onClick={clearCanvas}
+              className="text-[10px] px-2 py-1 text-[var(--text-muted)] font-medium
+                         hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Color swatches */}
+        <div className="shrink-0 px-3 py-2 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div
+              className="w-5 h-5 rounded-md shadow-inner"
+              style={{ backgroundColor: brushColor, border: brushColor === '#ffffff' ? '1px solid #ddd' : 'none' }}
+            />
+            <span className="text-[10px] text-[var(--text-muted)] font-mono uppercase">{brushColor}</span>
+          </div>
+          <div className="grid grid-cols-8 gap-px bg-[var(--border)] rounded-lg overflow-hidden shadow-inner">
+            {COLORS.map((c, i) => (
+              <button
+                key={`${c}-${i}`}
+                onClick={() => { setBrushColor(c); setTool('draw'); }}
+                className={`aspect-square transition-all relative ${
+                  brushColor === c && tool === 'draw'
+                    ? 'ring-2 ring-[var(--accent)] ring-inset z-10 scale-110'
+                    : 'hover:scale-105 hover:z-10'
+                }`}
+                style={{ backgroundColor: c }}
+                title={c}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Drawing canvas — fixed resolution, CSS-scaled to fill */}
+        <div className="flex-1 min-h-[140px] relative bg-[repeating-conic-gradient(#f3f3f3_0%_25%,#fff_0%_50%)_0_0/16px_16px]">
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_W}
+            height={CANVAS_H}
+            className="touch-none absolute inset-0 w-full h-full"
+            style={{ cursor: tool === 'erase' ? 'cell' : 'crosshair' }}
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+          />
+        </div>
+
+        {/* Save bar */}
+        {onSave && (
+          <div className="shrink-0 px-3 py-2 border-t border-[var(--border)] flex items-center justify-between bg-gray-50">
+            <span className="text-[10px] text-[var(--text-muted)]">
+              {hasContent ? 'Drawing ready' : 'Draw something above'}
+            </span>
+            <button
+              onClick={handleSave}
+              disabled={!hasContent}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[var(--accent)]
+                         hover:bg-[var(--accent-hover)] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Save to Designs
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+export default DrawingCanvas;
