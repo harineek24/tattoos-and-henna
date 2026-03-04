@@ -20,6 +20,7 @@ export default function HennaStudio() {
   const [authorName, setAuthorName] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [designRefresh, setDesignRefresh] = useState(0);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const pushHistory = useCallback(() => {
     setPlacedDesigns((current) => {
@@ -300,10 +301,10 @@ export default function HennaStudio() {
         </div>
       )}
 
-      {/* Main content - stacks vertically on mobile, side-by-side on desktop */}
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
-        {/* Hand Canvas */}
-        <div className="h-[50vh] md:h-auto md:flex-[3] border-b md:border-b-0 md:border-r border-[var(--border)] min-w-0">
+      {/* Main content - side-by-side on desktop, full canvas + slide-up panel on mobile */}
+      <div className="flex-1 flex flex-col md:flex-row min-h-0 relative">
+        {/* Hand Canvas — full height on mobile, flex-[3] on desktop */}
+        <div className="flex-1 md:flex-[3] border-b md:border-b-0 md:border-r border-[var(--border)] min-w-0 relative">
           <HandCanvas
             ref={handCanvasRef}
             placedDesigns={placedDesigns}
@@ -311,10 +312,50 @@ export default function HennaStudio() {
             onDeleteDesign={handleDeleteDesign}
             onDropDesign={handleDropDesign}
           />
+
+          {/* Mobile toggle button to open design panel */}
+          <button
+            onClick={() => setPanelOpen(!panelOpen)}
+            className="md:hidden absolute bottom-4 right-4 z-30 w-12 h-12 rounded-full bg-[var(--accent)] text-white shadow-lg
+                       flex items-center justify-center active:scale-95 transition-all"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {panelOpen ? (
+                <path d="M18 6L6 18M6 6l12 12" />
+              ) : (
+                <>
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
 
-        {/* Right panel — Gallery/Community + Drawing */}
-        <div className="flex-1 md:flex-[2] flex flex-col min-w-0 md:max-w-[480px]">
+        {/* Mobile backdrop */}
+        {panelOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/20 z-30"
+            onClick={() => setPanelOpen(false)}
+          />
+        )}
+
+        {/* Right panel — always visible on desktop, slide-up sheet on mobile */}
+        <div className={`
+          md:flex-[2] flex flex-col min-w-0 md:max-w-[480px] bg-white
+          md:relative md:translate-y-0
+          max-md:fixed max-md:left-0 max-md:right-0 max-md:bottom-0 max-md:z-40
+          max-md:rounded-t-2xl max-md:shadow-2xl max-md:max-h-[75vh]
+          max-md:transition-transform max-md:duration-300 max-md:ease-in-out
+          ${panelOpen ? 'max-md:translate-y-0' : 'max-md:translate-y-full'}
+        `}>
+          {/* Mobile drag handle */}
+          <div className="md:hidden flex justify-center py-2 shrink-0">
+            <div className="w-10 h-1 rounded-full bg-gray-300" />
+          </div>
+
           {/* Tabs */}
           <div className="flex border-b border-[var(--border)] shrink-0 bg-white">
             <button
