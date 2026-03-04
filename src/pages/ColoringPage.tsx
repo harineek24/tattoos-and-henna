@@ -159,6 +159,7 @@ export default function ColoringPage() {
   const [toasts, setToasts] = useState<{ id: string; message: string }[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
@@ -681,7 +682,7 @@ export default function ColoringPage() {
       )}
 
       {/* ─── Main: Canvas + Right Sidebar ─────────────────────── */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative overflow-hidden">
 
         {/* Canvas area */}
         <div
@@ -745,10 +746,54 @@ export default function ColoringPage() {
               </div>
             ))}
           </div>
+
+          {/* Mobile sidebar toggle button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="md:hidden absolute top-3 right-3 z-30 w-10 h-10 rounded-full bg-white shadow-lg border border-[var(--border)]
+                       flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] active:scale-95 transition-all"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {sidebarOpen ? (
+                <path d="M18 6L6 18M6 6l12 12" />
+              ) : (
+                <>
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </>
+              )}
+            </svg>
+          </button>
         </div>
 
+        {/* Mobile backdrop */}
+        {sidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/20 z-30"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* ─── Right sidebar (two columns) ────────────────────── */}
-        <div className="w-[340px] shrink-0 border-l border-[var(--border)] bg-white flex overflow-hidden">
+        <div className={`
+          w-[340px] shrink-0 border-l border-[var(--border)] bg-white flex overflow-hidden relative
+          md:translate-x-0
+          max-md:fixed max-md:right-0 max-md:top-0 max-md:bottom-0 max-md:z-40
+          max-md:shadow-2xl max-md:transition-transform max-md:duration-300 max-md:ease-in-out
+          ${sidebarOpen ? 'max-md:translate-x-0' : 'max-md:translate-x-full'}
+        `}>
+
+          {/* Mobile close button inside sidebar */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden absolute top-2 right-2 z-10 p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-[var(--text-muted)]"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
 
           {/* Column 1: Color swatches (eyeshadow palette) */}
           <div className="w-[180px] border-r border-[var(--border)] flex flex-col overflow-hidden">
