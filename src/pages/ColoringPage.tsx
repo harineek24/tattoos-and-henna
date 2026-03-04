@@ -141,6 +141,35 @@ function floodFill(ctx: CanvasRenderingContext2D, startX: number, startY: number
   ctx.putImageData(imageData, 0, 0);
 }
 
+// ─── Saved rooms persistence ────────────────────────────────────
+interface SavedRoom {
+  roomId: string;
+  name: string;       // user-chosen name or auto-generated
+  thumbnail: string;  // small data-url snapshot
+  savedAt: number;    // timestamp
+}
+
+const SAVED_ROOMS_KEY = 'coloring-saved-rooms';
+
+function loadSavedRooms(): SavedRoom[] {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_ROOMS_KEY) || '[]');
+  } catch { return []; }
+}
+
+function persistSavedRooms(rooms: SavedRoom[]) {
+  localStorage.setItem(SAVED_ROOMS_KEY, JSON.stringify(rooms));
+}
+
+function createThumbnail(canvas: HTMLCanvasElement): string {
+  const thumb = document.createElement('canvas');
+  thumb.width = 120;
+  thumb.height = 90;
+  const ctx = thumb.getContext('2d')!;
+  ctx.drawImage(canvas, 0, 0, 120, 90);
+  return thumb.toDataURL('image/jpeg', 0.6);
+}
+
 // ─── Component ───────────────────────────────────────────────────
 export default function ColoringPage() {
   const [searchParams] = useSearchParams();
@@ -164,6 +193,7 @@ export default function ColoringPage() {
   const [toasts, setToasts] = useState<{ id: string; message: string }[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   const [showMultiplayer, setShowMultiplayer] = useState(false);
+  const [savedRooms, setSavedRooms] = useState<SavedRoom[]>(loadSavedRooms);
   const [showInvite, setShowInvite] = useState(!!roomParam);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -250,22 +280,8 @@ export default function ColoringPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [undo, redo]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (entry) {
-        setCanvasSize({
-          width: Math.floor(entry.contentRect.width),
-          height: Math.floor(entry.contentRect.height),
-        });
-      }
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
-
+  // Set canvas to a fixed resolution so art is consistent across devices.
+  // The canvas CSS will scale to fill the container.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -273,7 +289,8 @@ export default function ColoringPage() {
     if (!ctx) return;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, [canvasSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ─── PartyKit connection ───────────────────────────────────────
   const connectToRoom = useCallback((id: string) => {
@@ -473,15 +490,19 @@ export default function ColoringPage() {
     const canvas = canvasRef.current;
     if (!canvas) return [0, 0];
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     if ('touches' in e) {
+      const touch = e.touches[0] || (e as React.TouchEvent).changedTouches[0];
+      if (!touch) return [0, 0];
       return [
-        (e.touches[0].clientX - rect.left) / zoom,
-        (e.touches[0].clientY - rect.top) / zoom,
+        (touch.clientX - rect.left) * scaleX,
+        (touch.clientY - rect.top) * scaleY,
       ];
     }
     return [
-      (e.clientX - rect.left) / zoom,
-      (e.clientY - rect.top) / zoom,
+      (e.clientX - rect.left) * scaleX,
+      (e.clientY - rect.top) * scaleY,
     ];
   };
 
@@ -525,6 +546,7 @@ export default function ColoringPage() {
   };
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) e.preventDefault();
     const [x, y] = getPos(e);
     updateMagCenterFromMainPos(x, y);
 
@@ -563,6 +585,7 @@ export default function ColoringPage() {
   };
 
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) e.preventDefault();
     const [x, y] = getPos(e);
     updateMagCenterFromMainPos(x, y);
 
@@ -872,6 +895,53 @@ export default function ColoringPage() {
     }
   };
 
+  // ─── Room save / restore ──────────────────────────────────────
+  const saveRoom = () => {
+    if (!roomId) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const thumbnail = createThumbnail(canvas);
+    const existing = savedRooms.filter((r) => r.roomId !== roomId);
+    const updated: SavedRoom[] = [
+      { roomId, name: userName || 'Room ' + roomId.slice(0, 4), thumbnail, savedAt: Date.now() },
+      ...existing,
+    ].slice(0, 20); // keep at most 20
+    setSavedRooms(updated);
+    persistSavedRooms(updated);
+    showToast('Room saved!');
+  };
+
+  const deleteRoom = (id: string) => {
+    const updated = savedRooms.filter((r) => r.roomId !== id);
+    setSavedRooms(updated);
+    persistSavedRooms(updated);
+  };
+
+  const rejoinRoom = (id: string) => {
+    setShowMultiplayer(false);
+    connectToRoom(id);
+  };
+
+  // Auto-save current room every 30 seconds while connected
+  useEffect(() => {
+    if (!connected || !roomId) return;
+    const interval = setInterval(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const thumbnail = createThumbnail(canvas);
+      setSavedRooms((prev) => {
+        const existing = prev.filter((r) => r.roomId !== roomId);
+        const updated: SavedRoom[] = [
+          { roomId, name: userName || 'Room ' + roomId.slice(0, 4), thumbnail, savedAt: Date.now() },
+          ...existing,
+        ].slice(0, 20);
+        persistSavedRooms(updated);
+        return updated;
+      });
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [connected, roomId, userName]);
+
   // ─── Sidebar action button ─────────────────────────────────────
   const actionBtn = (
     onClick: () => void,
@@ -963,6 +1033,52 @@ export default function ColoringPage() {
                   Join
                 </button>
               </div>
+
+              {/* Saved rooms */}
+              {savedRooms.length > 0 && (
+                <>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                    <span className="text-[10px] text-[var(--text-muted)] uppercase">saved rooms</span>
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                  </div>
+                  <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto">
+                    {savedRooms.map((room) => (
+                      <div
+                        key={room.roomId}
+                        className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-50 transition-colors group"
+                      >
+                        <img
+                          src={room.thumbnail}
+                          alt=""
+                          className="w-10 h-8 rounded border border-[var(--border)] object-cover shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-[var(--text)] truncate">{room.name}</div>
+                          <div className="text-[10px] text-[var(--text-muted)] font-mono">{room.roomId}</div>
+                        </div>
+                        <button
+                          onClick={() => rejoinRoom(room.roomId)}
+                          className="text-[10px] font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]
+                                     px-2 py-1 rounded transition-colors shrink-0"
+                        >
+                          Rejoin
+                        </button>
+                        <button
+                          onClick={() => deleteRoom(room.roomId)}
+                          className="text-[10px] text-[var(--text-muted)] hover:text-red-500
+                                     opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                          title="Remove"
+                        >
+                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 6L6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -973,13 +1089,27 @@ export default function ColoringPage() {
               <div className="text-xs text-[var(--text-muted)] bg-gray-50 rounded-lg px-3 py-2 break-all font-mono">
                 {roomId}
               </div>
-              <button
-                onClick={copyShareLink}
-                className="text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]
-                           rounded-lg px-3 py-2 transition-colors border border-[var(--border)] mt-1"
-              >
-                Copy invite link
-              </button>
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={copyShareLink}
+                  className="flex-1 text-sm font-medium text-[var(--accent)] hover:bg-[var(--accent-light)]
+                             rounded-lg px-3 py-2 transition-colors border border-[var(--border)]"
+                >
+                  Copy invite link
+                </button>
+                <button
+                  onClick={saveRoom}
+                  className="text-sm font-medium text-emerald-600 hover:bg-emerald-50
+                             rounded-lg px-3 py-2 transition-colors border border-emerald-200"
+                  title="Save this room so you can come back later"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                  </svg>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1007,8 +1137,6 @@ export default function ColoringPage() {
                 transformOrigin: 'top left',
                 width: canvasSize.width,
                 height: canvasSize.height,
-                minWidth: canvasSize.width * zoom,
-                minHeight: canvasSize.height * zoom,
               }}
               onMouseDown={handlePointerDown}
               onMouseMove={handlePointerMove}
