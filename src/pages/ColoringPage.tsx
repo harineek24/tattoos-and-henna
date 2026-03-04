@@ -167,6 +167,15 @@ export default function ColoringPage() {
   const [showInvite, setShowInvite] = useState(!!roomParam);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [magnifierOn, setMagnifierOn] = useState(false);
+  const [magCenter, setMagCenter] = useState<[number, number]>([0, 0]); // canvas-pixel coords
+  const [magZoom, setMagZoom] = useState(4);
+  const [draggingMag, setDraggingMag] = useState(false);
+  const magCanvasRef = useRef<HTMLCanvasElement>(null);
+  const magContainerRef = useRef<HTMLDivElement>(null);
+  const magDragOffset = useRef<[number, number]>([0, 0]);
+  const magPos = useRef<[number, number]>([20, 20]); // screen position of the magnifier
+  const [magPosState, setMagPosState] = useState<[number, number]>([20, 20]);
   const socketRef = useRef<PartySocket | null>(null);
   const myId = useRef(uuidv4());
   const strokeBuffer = useRef<[number, number][]>([]);
@@ -517,6 +526,7 @@ export default function ColoringPage() {
 
   const handlePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
     const [x, y] = getPos(e);
+    updateMagCenterFromMainPos(x, y);
 
     if (tool === 'fill') {
       const canvas = canvasRef.current;
@@ -526,6 +536,7 @@ export default function ColoringPage() {
       saveSnapshot();
       floodFill(ctx, x, y, color);
       broadcast({ type: 'fill', x, y, color });
+      requestAnimationFrame(updateMagnifier);
       return;
     }
 
@@ -548,10 +559,12 @@ export default function ColoringPage() {
       ctx.moveTo(x, y);
       applyBrushStyle(ctx, tool === 'eraser' ? 'round' : brushType, brushSize, strokeColor, alpha);
     }
+    requestAnimationFrame(updateMagnifier);
   };
 
   const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
     const [x, y] = getPos(e);
+    updateMagCenterFromMainPos(x, y);
 
     broadcast({
       type: 'cursor',
@@ -579,6 +592,7 @@ export default function ColoringPage() {
       ctx.stroke();
     }
     strokeBuffer.current.push([x, y]);
+    requestAnimationFrame(updateMagnifier);
   };
 
   const handlePointerUp = () => {
@@ -599,6 +613,165 @@ export default function ColoringPage() {
     setIsDrawing(false);
     strokeBuffer.current = [];
   };
+
+  // ─── Magnifier: repaint zoomed view from main canvas ──────────
+  const MAG_SIZE = 200;
+
+  const updateMagnifier = useCallback(() => {
+    const magCanvas = magCanvasRef.current;
+    const mainCanvas = canvasRef.current;
+    if (!magCanvas || !mainCanvas || !magnifierOn) return;
+    const magCtx = magCanvas.getContext('2d');
+    if (!magCtx) return;
+
+    const srcSize = MAG_SIZE / magZoom;
+    const sx = magCenter[0] - srcSize / 2;
+    const sy = magCenter[1] - srcSize / 2;
+
+    magCtx.imageSmoothingEnabled = false;
+    magCtx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
+    magCtx.drawImage(mainCanvas, sx, sy, srcSize, srcSize, 0, 0, MAG_SIZE, MAG_SIZE);
+
+    // crosshair
+    magCtx.strokeStyle = 'rgba(0,0,0,0.25)';
+    magCtx.lineWidth = 1;
+    magCtx.beginPath();
+    magCtx.moveTo(MAG_SIZE / 2, 0);
+    magCtx.lineTo(MAG_SIZE / 2, MAG_SIZE);
+    magCtx.moveTo(0, MAG_SIZE / 2);
+    magCtx.lineTo(MAG_SIZE, MAG_SIZE / 2);
+    magCtx.stroke();
+  }, [magnifierOn, magCenter, magZoom]);
+
+  useEffect(() => {
+    updateMagnifier();
+  }, [updateMagnifier]);
+
+  // update magnifier center when drawing on main canvas
+  const updateMagCenterFromMainPos = (x: number, y: number) => {
+    if (magnifierOn) setMagCenter([x, y]);
+  };
+
+  // Convert magnifier-local pixel position to main canvas coords
+  const magToCanvas = (mx: number, my: number): [number, number] => {
+    const srcSize = MAG_SIZE / magZoom;
+    const sx = magCenter[0] - srcSize / 2;
+    const sy = magCenter[1] - srcSize / 2;
+    return [sx + (mx / MAG_SIZE) * srcSize, sy + (my / MAG_SIZE) * srcSize];
+  };
+
+  const getMagPos = (e: React.MouseEvent | React.TouchEvent): [number, number] => {
+    const magCanvas = magCanvasRef.current;
+    if (!magCanvas) return [0, 0];
+    const rect = magCanvas.getBoundingClientRect();
+    if ('touches' in e) {
+      return [e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top];
+    }
+    return [e.clientX - rect.left, e.clientY - rect.top];
+  };
+
+  const handleMagPointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    const [mx, my] = getMagPos(e);
+    const [cx, cy] = magToCanvas(mx, my);
+
+    if (tool === 'fill') {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      saveSnapshot();
+      floodFill(ctx, cx, cy, color);
+      broadcast({ type: 'fill', x: cx, y: cy, color });
+      requestAnimationFrame(updateMagnifier);
+      return;
+    }
+
+    saveSnapshot();
+    setIsDrawing(true);
+    strokeBuffer.current = [[cx, cy]];
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const strokeColor = tool === 'eraser' ? '#ffffff' : color;
+    const alpha = tool === 'eraser' ? 1 : opacity / 100;
+
+    if (brushType === 'spray' && tool !== 'eraser') {
+      drawSpray(ctx, cx, cy, brushSize, strokeColor, alpha);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      applyBrushStyle(ctx, tool === 'eraser' ? 'round' : brushType, brushSize, strokeColor, alpha);
+    }
+    requestAnimationFrame(updateMagnifier);
+  };
+
+  const handleMagPointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if (!isDrawing) return;
+
+    const [mx, my] = getMagPos(e);
+    const [cx, cy] = magToCanvas(mx, my);
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const strokeColor = tool === 'eraser' ? '#ffffff' : color;
+    const alpha = tool === 'eraser' ? 1 : opacity / 100;
+
+    if (brushType === 'spray' && tool !== 'eraser') {
+      drawSpray(ctx, cx, cy, brushSize, strokeColor, alpha);
+    } else {
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+    }
+    strokeBuffer.current.push([cx, cy]);
+    requestAnimationFrame(updateMagnifier);
+  };
+
+  const handleMagPointerUp = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
+    handlePointerUp();
+    requestAnimationFrame(updateMagnifier);
+  };
+
+  // Drag the magnifier window
+  const handleMagDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDraggingMag(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    magDragOffset.current = [clientX - magPos.current[0], clientY - magPos.current[1]];
+  };
+
+  useEffect(() => {
+    if (!draggingMag) return;
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const nx = clientX - magDragOffset.current[0];
+      const ny = clientY - magDragOffset.current[1];
+      magPos.current = [nx, ny];
+      setMagPosState([nx, ny]);
+    };
+    const handleUp = () => setDraggingMag(false);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, [draggingMag]);
 
   // ─── Load image onto canvas ────────────────────────────────────
   const loadImageToCanvas = (src: string) => {
@@ -909,6 +1082,63 @@ export default function ColoringPage() {
               )}
             </svg>
           </button>
+
+          {/* ─── Magnifier floating window ──────────────────────── */}
+          {magnifierOn && (
+            <div
+              ref={magContainerRef}
+              className="fixed z-50 select-none"
+              style={{ left: magPosState[0], top: magPosState[1] }}
+            >
+              {/* Title bar (drag handle) */}
+              <div
+                className="flex items-center justify-between px-2 py-1 bg-gray-800 text-white rounded-t-xl cursor-grab active:cursor-grabbing"
+                onMouseDown={handleMagDragStart}
+                onTouchStart={handleMagDragStart}
+              >
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M11 8v6" />
+                    <path d="M8 11h6" />
+                  </svg>
+                  <span className="text-[10px] font-semibold">{magZoom}x Magnifier</span>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={() => setMagZoom((z) => Math.max(2, z - 1))}
+                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/20 text-[10px] font-bold"
+                  >-</button>
+                  <button
+                    onClick={() => setMagZoom((z) => Math.min(8, z + 1))}
+                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/20 text-[10px] font-bold"
+                  >+</button>
+                  <button
+                    onClick={() => setMagnifierOn(false)}
+                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-red-500/60 text-[10px] font-bold ml-0.5"
+                  >x</button>
+                </div>
+              </div>
+              {/* Magnifier canvas */}
+              <div className="border-2 border-gray-800 border-t-0 rounded-b-xl overflow-hidden bg-white">
+                <canvas
+                  ref={magCanvasRef}
+                  width={MAG_SIZE}
+                  height={MAG_SIZE}
+                  className="touch-none block"
+                  style={{ width: MAG_SIZE, height: MAG_SIZE, cursor: tool === 'fill' ? 'crosshair' : tool === 'eraser' ? 'cell' : 'crosshair' }}
+                  onMouseDown={handleMagPointerDown}
+                  onMouseMove={handleMagPointerMove}
+                  onMouseUp={handleMagPointerUp}
+                  onMouseLeave={handleMagPointerUp}
+                  onTouchStart={handleMagPointerDown}
+                  onTouchMove={handleMagPointerMove}
+                  onTouchEnd={handleMagPointerUp}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile backdrop */}
@@ -1010,6 +1240,23 @@ export default function ColoringPage() {
                     {label}
                   </button>
                 ))}
+                {/* Magnifier toggle */}
+                <button
+                  onClick={() => setMagnifierOn((v) => !v)}
+                  className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                    magnifierOn
+                      ? 'bg-[var(--accent)] text-white shadow-sm'
+                      : 'text-[var(--text-muted)] hover:bg-gray-100 hover:text-[var(--text)]'
+                  }`}
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                    <path d="M11 8v6" />
+                    <path d="M8 11h6" />
+                  </svg>
+                  Magnifier
+                </button>
               </div>
 
               {/* Brush types */}
