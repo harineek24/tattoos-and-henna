@@ -1202,8 +1202,11 @@ export default function ColoringPage() {
 
       {/* ─── Room invitation popup ─────────────────────────────── */}
       {showInvite && !connected && roomParam && (
-        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center animate-[fadeIn_0.2s_ease-out]">
-          <div className="bg-white rounded-2xl shadow-2xl w-80 p-6 flex flex-col gap-4 animate-[slideIn_0.3s_ease-out]">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-80 p-6 flex flex-col gap-4">
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-[var(--accent-light)] flex items-center justify-center mx-auto mb-3">
                 <svg className="w-6 h-6 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
