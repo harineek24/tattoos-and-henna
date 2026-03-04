@@ -888,18 +888,39 @@ export default function ColoringPage() {
                 ))}
               </div>
 
-              {/* Brush size */}
+              {/* Brush sizes */}
               {tool !== 'fill' && (
-                <div className="flex items-center gap-2 mt-3">
-                  <input
-                    type="range"
-                    min="1"
-                    max="30"
-                    value={brushSize}
-                    onChange={(e) => setBrushSize(Number(e.target.value))}
-                    className="flex-1 accent-[var(--accent)]"
-                  />
-                  <span className="text-[10px] text-[var(--text-muted)] w-7">{brushSize}px</span>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    {[1, 3, 6, 10, 16, 24].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setBrushSize(s)}
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-lg transition-all ${
+                          brushSize === s
+                            ? 'bg-[var(--accent-light)] ring-1 ring-[var(--accent)]'
+                            : 'hover:bg-gray-100'
+                        }`}
+                        title={`${s}px`}
+                      >
+                        <span
+                          className="rounded-full bg-[var(--text)] shrink-0"
+                          style={{ width: Math.max(3, Math.min(s, 18)), height: Math.max(3, Math.min(s, 18)) }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min="1"
+                      max="30"
+                      value={brushSize}
+                      onChange={(e) => setBrushSize(Number(e.target.value))}
+                      className="flex-1 accent-[var(--accent)]"
+                    />
+                    <span className="text-[10px] text-[var(--text-muted)] w-7">{brushSize}px</span>
+                  </div>
                 </div>
               )}
             </div>
